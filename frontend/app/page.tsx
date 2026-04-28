@@ -32,7 +32,7 @@ export default function Home() {
       return;
     }
 
-    setSuccess("Lead submitted successfully. We will follow up shortly.");
+    setSuccess("Your request was submitted. We will follow up shortly.");
     setForm({ name: "", email: "", phone: "", message: "" });
   };
 
@@ -41,100 +41,164 @@ export default function Home() {
       <section style={styles.hero}>
         <div>
           <p style={styles.badge}>AI Growth Engine for Therapists</p>
+
           <h1 style={styles.h1}>
-            Help therapists get more clients without posting every day.
+            Get More Therapy Clients Without Posting Every Day.
           </h1>
+
           <p style={styles.heroText}>
-            TheraGrowth AI helps solo therapists, LCSWs, counselors, telehealth
-            clinicians, and private practices capture leads, automate marketing,
+            TheraGrowth AI helps therapists, counselors, LCSWs, telehealth
+            clinicians, and private practices attract leads, automate follow-up,
             and grow with a professional online system.
           </p>
 
           <div style={styles.buttonRow}>
-            <a href="#lead-form" style={styles.primaryBtn}>Book a Demo</a>
-            <a href="#pricing" style={styles.secondaryBtn}>View Pricing</a>
+            <a href="#book-call" style={styles.primaryBtn}>
+              Book Free Strategy Call
+            </a>
+            <a href="#pricing" style={styles.secondaryBtn}>
+              See Pricing
+            </a>
           </div>
+
+          <p style={styles.trust}>
+            Built for Therapists • Private Practices • Telehealth • Ethical Marketing
+          </p>
         </div>
 
         <div style={styles.heroCard}>
-          <h2>What it does</h2>
+          <h2 style={styles.h2Small}>What We Help You Do</h2>
           <ul style={styles.list}>
-            <li>Captures website leads</li>
-            <li>Stores inquiries in Supabase</li>
-            <li>Creates AI marketing content</li>
-            <li>Supports therapist growth campaigns</li>
-            <li>Prepares for Stripe subscriptions</li>
+            <li>Capture more website inquiries</li>
+            <li>Improve follow-up with potential clients</li>
+            <li>Create content ideas without daily stress</li>
+            <li>Look more professional online</li>
+            <li>Turn visitors into booked consultations</li>
           </ul>
         </div>
       </section>
 
       <section style={styles.grid3}>
-        <Card title="For Solo Therapists" text="A simple system to turn website visitors into consultation requests." />
-        <Card title="For Telehealth Practices" text="Capture leads from anywhere and follow up faster." />
-        <Card title="For Your Friend’s Practice" text="Use this as a live demo and first pilot client case study." />
+        <Card
+          title="For Solo Therapists"
+          text="Turn your website into a client inquiry system instead of just an online brochure."
+        />
+        <Card
+          title="For Telehealth Practices"
+          text="Capture leads from anywhere and follow up faster with a simple growth funnel."
+        />
+        <Card
+          title="For New Private Practices"
+          text="Launch with a professional online presence and a clear client acquisition system."
+        />
       </section>
 
       <section style={styles.section}>
-        <h2 style={styles.h2}>The Problem</h2>
+        <h2 style={styles.h2}>Most Great Therapists Struggle With Marketing</h2>
         <p style={styles.paragraph}>
-          Many therapists are excellent clinicians but struggle with marketing,
-          websites, lead follow-up, social media, and converting visitors into
-          booked consultations. TheraGrowth AI gives them a business growth
-          system without forcing them to become marketers.
+          You help people heal, but websites, SEO, social media, lead follow-up,
+          and online positioning often get ignored. That means lost inquiries,
+          inconsistent referrals, and unnecessary stress trying to grow your practice.
         </p>
       </section>
 
       <section style={styles.grid2}>
         <div style={styles.card}>
-          <h2 style={styles.h2}>Solution</h2>
-          <ul style={styles.list}>
-            <li>Professional website positioning</li>
-            <li>Lead capture form</li>
-            <li>AI content generation</li>
-            <li>Pricing and subscription model</li>
-            <li>Future CRM dashboard</li>
+          <h2 style={styles.h2}>We Handle Growth So You Can Focus on Clients</h2>
+          <ul style={styles.checkList}>
+            <li>✔ Lead capture website tools</li>
+            <li>✔ AI content ideas for social media</li>
+            <li>✔ Better inquiry follow-up</li>
+            <li>✔ Professional online positioning</li>
+            <li>✔ Scalable monthly growth system</li>
           </ul>
         </div>
 
-        <div style={styles.card}>
-          <h2 style={styles.h2}>Revenue Model</h2>
-          <p style={styles.paragraph}>
-            Start with service packages for therapists, then convert common
-            features into SaaS subscriptions.
+        <div style={styles.cardDark}>
+          <h2>Founding Client Offer</h2>
+          <p style={styles.darkText}>
+            We are onboarding pilot therapists now. Founding members get discounted
+            setup, direct support, and early access to new growth features.
           </p>
-          <ul style={styles.list}>
-            <li>$49/month Starter</li>
-            <li>$99/month Growth</li>
-            <li>$299/month Pro</li>
-            <li>$500–$2,000 setup services</li>
-          </ul>
+          <a href="#book-call" style={styles.lightBtn}>
+            Claim Founding Member Spot
+          </a>
         </div>
       </section>
 
       <section id="pricing" style={styles.pricing}>
-        <h2 style={styles.h2}>Pricing</h2>
-        <div style={styles.grid3}>
-          <Price name="Starter" price="$49/mo" text="Lead capture + simple content tools." />
-          <Price name="Growth" price="$99/mo" text="Dashboard, analytics, and content packs." />
-          <Price name="Pro" price="$299/mo" text="Automation, premium support, and practice growth tools." />
+        <h2 style={styles.h2}>Simple Pricing</h2>
+        <p style={styles.paragraph}>
+          Start lean. Upgrade as your practice grows.
+        </p>
+
+        <div style={styles.grid3NoMargin}>
+          <Price
+            name="Starter"
+            price="$99/mo"
+            text="Lead capture, basic growth support, and monthly updates."
+          />
+          <Price
+            name="Growth"
+            price="$299/mo"
+            text="Lead generation support, content help, and conversion improvement."
+            featured
+          />
+          <Price
+            name="Premium"
+            price="$799/mo"
+            text="Done-for-you growth partner service for serious private practices."
+          />
         </div>
       </section>
 
-      <section id="lead-form" style={styles.grid2}>
+      <section style={styles.section}>
+        <h2 style={styles.h2}>What This Can Replace</h2>
+        <div style={styles.grid3NoMargin}>
+          <Card title="Manual Posting" text="Stop wondering what to post every day." />
+          <Card title="Weak Website Forms" text="Capture inquiries in a structured system." />
+          <Card title="Missed Follow-Ups" text="Know who reached out and what they need." />
+        </div>
+      </section>
+
+      <section id="book-call" style={styles.grid2}>
         <div style={styles.card}>
-          <h2 style={styles.h2}>Demo Lead Capture</h2>
+          <h2 style={styles.h2}>Book a Free 15-Minute Growth Call</h2>
           <p style={styles.paragraph}>
-            This is the live form that proves the platform works. Every submitted
-            lead is saved into your Supabase database.
+            Tell us about your practice and we’ll show how TheraGrowth AI can help
+            you attract more ideal clients.
           </p>
 
-          <input style={styles.input} placeholder="Client name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input style={styles.input} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input style={styles.input} placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <textarea style={styles.textarea} placeholder="What support are you looking for?" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          <input
+            style={styles.input}
+            placeholder="Your name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+
+          <input
+            style={styles.input}
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          <input
+            style={styles.input}
+            placeholder="Phone"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
+
+          <textarea
+            style={styles.textarea}
+            placeholder="Tell us about your practice and what you need help with."
+            value={form.message}
+            onChange={(e) => setForm({ ...form, message: e.target.value })}
+          />
 
           <button onClick={submitLead} style={styles.primaryBtn}>
-            {loading ? "Submitting..." : "Submit Lead"}
+            {loading ? "Submitting..." : "Request Free Growth Call"}
           </button>
 
           <p style={styles.success}>{success}</p>
@@ -142,10 +206,10 @@ export default function Home() {
 
         <div style={styles.cardDark}>
           <h2>Important Compliance Note</h2>
-          <p>
+          <p style={styles.darkText}>
             TheraGrowth AI is a marketing and business operations tool. It does
-            not provide therapy, diagnosis, crisis counseling, or emergency
-            medical support.
+            not provide therapy, diagnosis, crisis counseling, emergency support,
+            or clinical treatment recommendations.
           </p>
         </div>
       </section>
@@ -162,12 +226,26 @@ function Card({ title, text }: { title: string; text: string }) {
   );
 }
 
-function Price({ name, price, text }: { name: string; price: string; text: string }) {
+function Price({
+  name,
+  price,
+  text,
+  featured,
+}: {
+  name: string;
+  price: string;
+  text: string;
+  featured?: boolean;
+}) {
   return (
-    <div style={styles.card}>
+    <div style={featured ? styles.priceFeatured : styles.card}>
+      {featured && <p style={styles.featuredBadge}>Most Popular</p>}
       <h3>{name}</h3>
       <h2 style={styles.price}>{price}</h2>
       <p style={styles.paragraph}>{text}</p>
+      <a href="#book-call" style={featured ? styles.lightBtn : styles.primaryBtn}>
+        Get Started
+      </a>
     </div>
   );
 }
@@ -187,7 +265,7 @@ const styles: Record<string, any> = {
     borderRadius: "32px",
     padding: "60px",
     display: "grid",
-    gridTemplateColumns: "1.5fr 1fr",
+    gridTemplateColumns: "1.45fr 1fr",
     gap: "40px",
     boxShadow: "0 24px 60px rgba(8,18,45,0.08)",
   },
@@ -200,7 +278,7 @@ const styles: Record<string, any> = {
     marginBottom: "18px",
   },
   h1: {
-    fontSize: "58px",
+    fontSize: "60px",
     lineHeight: "1.05",
     margin: "0 0 20px",
     maxWidth: "820px",
@@ -209,6 +287,11 @@ const styles: Record<string, any> = {
     fontSize: "21px",
     lineHeight: "1.6",
     color: "#334155",
+  },
+  trust: {
+    marginTop: "26px",
+    color: "#475569",
+    fontWeight: 700,
   },
   buttonRow: {
     display: "flex",
@@ -226,6 +309,7 @@ const styles: Record<string, any> = {
     fontWeight: 700,
     cursor: "pointer",
     display: "inline-block",
+    marginTop: "12px",
   },
   secondaryBtn: {
     background: "#eef2ff",
@@ -235,15 +319,33 @@ const styles: Record<string, any> = {
     textDecoration: "none",
     fontWeight: 700,
   },
+  lightBtn: {
+    background: "white",
+    color: "#08122d",
+    padding: "15px 24px",
+    borderRadius: "14px",
+    textDecoration: "none",
+    fontWeight: 700,
+    display: "inline-block",
+    marginTop: "18px",
+  },
   heroCard: {
     background: "#f8fafc",
     border: "1px solid #e2e8f0",
     borderRadius: "24px",
-    padding: "28px",
+    padding: "30px",
+  },
+  h2Small: {
+    fontSize: "28px",
   },
   grid3: {
     maxWidth: "1180px",
     margin: "0 auto 32px",
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "24px",
+  },
+  grid3NoMargin: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
     gap: "24px",
@@ -274,12 +376,32 @@ const styles: Record<string, any> = {
     borderRadius: "26px",
     padding: "32px",
   },
+  priceFeatured: {
+    background: "#08122d",
+    color: "white",
+    borderRadius: "26px",
+    padding: "32px",
+    border: "1px solid #08122d",
+  },
+  featuredBadge: {
+    display: "inline-block",
+    background: "#e8eefc",
+    color: "#08122d",
+    padding: "8px 14px",
+    borderRadius: "999px",
+    fontWeight: 700,
+  },
   h2: {
-    fontSize: "30px",
+    fontSize: "32px",
     marginTop: 0,
   },
   paragraph: {
     color: "#475569",
+    lineHeight: "1.7",
+    fontSize: "17px",
+  },
+  darkText: {
+    color: "#dbeafe",
     lineHeight: "1.7",
     fontSize: "17px",
   },
@@ -288,12 +410,22 @@ const styles: Record<string, any> = {
     color: "#334155",
     fontSize: "17px",
   },
+  checkList: {
+    lineHeight: "2.1",
+    color: "#334155",
+    fontSize: "18px",
+    listStyle: "none",
+    paddingLeft: 0,
+  },
   pricing: {
     maxWidth: "1180px",
     margin: "0 auto 32px",
+    background: "white",
+    borderRadius: "26px",
+    padding: "36px",
   },
   price: {
-    fontSize: "42px",
+    fontSize: "46px",
     margin: "10px 0",
   },
   input: {
@@ -306,7 +438,7 @@ const styles: Record<string, any> = {
   },
   textarea: {
     width: "100%",
-    height: "140px",
+    height: "150px",
     padding: "15px",
     marginTop: "14px",
     borderRadius: "14px",
