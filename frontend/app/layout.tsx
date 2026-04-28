@@ -6,10 +6,21 @@ export const metadata: Metadata = {
   description: "AI growth assistant for therapists and private practices",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+
+        <script
+          src="//code.tidio.co/7fqkkcirnsv6d9lpc9dh8qiyfwpuu8f5.js"
+          async
+        ></script>
+      </body>
     </html>
   );
 }
