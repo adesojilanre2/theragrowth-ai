@@ -1,148 +1,60 @@
-const therapists: any = {
-  "jovonna-hale": {
-    name: "Jovonna Hale",
-    credentials: "LCSW, LICSW",
-    headline: "Therapy for Anxiety, Trauma, Stress, and Life Transitions",
-    subheadline:
-      "Work directly with Jovonna Hale through a private, professional therapy experience serving Colorado and Washington.",
-    locations: "Colorado & Washington",
-    specialties: [
-      "Anxiety therapy",
-      "Trauma support",
-      "Stress and burnout",
-      "Life transitions",
-      "Relationship challenges",
-    ],
-    insurance: [
-      "Insurance screening available",
-      "Private pay options",
-      "Eligibility verification support",
-    ],
-  },
-};
-
-export default function TherapistPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const therapist = therapists[params.slug] || therapists["jovonna-hale"];
-
+export default function BookingPage() {
   return (
-    <main className="min-h-screen bg-[#f4f6fb] text-[#07112f]">
-      <section className="mx-auto max-w-6xl px-6 py-12">
-        <div className="rounded-[32px] bg-white p-10 shadow-sm">
-          <div className="mb-6 inline-block rounded-full bg-[#eaf0ff] px-5 py-3 font-semibold">
-            Private Practice Growth System
-          </div>
-
-          <div className="grid gap-10 md:grid-cols-2 md:items-center">
-            <div>
-              <h1 className="text-5xl font-black leading-tight">
-                {therapist.headline}
-              </h1>
-
-              <p className="mt-6 text-xl leading-8 text-slate-700">
-                {therapist.subheadline}
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-4">
-                <a
-                  href="#contact"
-                  className="rounded-xl bg-[#07112f] px-7 py-4 font-bold text-white"
-                >
-                  Request Consultation
-                </a>
-
-                <a
-                  href="#insurance"
-                  className="rounded-xl bg-[#eef3ff] px-7 py-4 font-bold text-[#07112f]"
-                >
-                  Verify Insurance
-                </a>
-              </div>
-
-              <p className="mt-6 font-semibold">
-                Serving: {therapist.locations}
-              </p>
-            </div>
-
-            <div className="rounded-[28px] border bg-[#f8fbff] p-8">
-              <h2 className="text-2xl font-black">
-                {therapist.name}, {therapist.credentials}
-              </h2>
-              <p className="mt-4 text-slate-700">
-                A direct private practice experience designed to reduce
-                platform dependence and make getting started simple.
-              </p>
-
-              <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
-                <p className="font-bold">AI Assistant Available</p>
-                <p className="mt-2 text-slate-600">
-                  Ask about therapy services, insurance, booking, and
-                  availability.
-                </p>
-              </div>
-            </div>
-          </div>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f4f6fb",
+        padding: "60px 24px",
+        fontFamily: "Arial, sans-serif",
+        color: "#07112f",
+      }}
+    >
+      <section
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          background: "white",
+          borderRadius: "32px",
+          padding: "48px",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            background: "#eef3ff",
+            padding: "10px 18px",
+            borderRadius: "999px",
+            fontWeight: 900,
+            marginBottom: "24px",
+          }}
+        >
+          Booking
         </div>
 
-        <section className="mt-8 rounded-[28px] bg-white p-10 shadow-sm">
-          <h2 className="text-3xl font-black">Specialties</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {therapist.specialties.map((item: string) => (
-              <div key={item} className="rounded-2xl border p-5 font-semibold">
-                {item}
-              </div>
-            ))}
-          </div>
-        </section>
+        <h1 style={{ fontSize: "52px", margin: 0, fontWeight: 900 }}>
+          Request a Consultation
+        </h1>
 
-        <section
-          id="insurance"
-          className="mt-8 rounded-[28px] bg-[#07112f] p-10 text-white shadow-sm"
+        <p style={{ fontSize: "18px", lineHeight: 1.7, color: "#334155" }}>
+          Complete the consultation request form so availability, fit, insurance,
+          and next steps can be reviewed.
+        </p>
+
+        <a
+          href="/therapists/jovonna-hale#consultation"
+          style={{
+            display: "inline-block",
+            marginTop: "24px",
+            background: "#07112f",
+            color: "white",
+            padding: "16px 24px",
+            borderRadius: "16px",
+            textDecoration: "none",
+            fontWeight: 900,
+          }}
         >
-          <h2 className="text-3xl font-black">Insurance & Intake</h2>
-          <p className="mt-4 max-w-3xl text-lg leading-8">
-            Submit your insurance details and care needs so eligibility,
-            benefits, and next steps can be reviewed before scheduling.
-          </p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {therapist.insurance.map((item: string) => (
-              <div
-                key={item}
-                className="rounded-2xl bg-white/10 p-5 font-semibold"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="contact" className="mt-8 rounded-[28px] bg-white p-10">
-          <h2 className="text-3xl font-black">Request a Consultation</h2>
-          <p className="mt-3 text-slate-700">
-            This form will become your lead capture and intake system.
-          </p>
-
-          <form className="mt-6 grid gap-4">
-            <input className="rounded-xl border p-4" placeholder="Full name" />
-            <input className="rounded-xl border p-4" placeholder="Email" />
-            <input className="rounded-xl border p-4" placeholder="Phone" />
-            <input
-              className="rounded-xl border p-4"
-              placeholder="Insurance provider"
-            />
-            <textarea
-              className="min-h-[140px] rounded-xl border p-4"
-              placeholder="What support are you looking for?"
-            />
-            <button className="w-fit rounded-xl bg-[#07112f] px-7 py-4 font-bold text-white">
-              Submit Request
-            </button>
-          </form>
-        </section>
+          Go to Consultation Form
+        </a>
       </section>
     </main>
   );
