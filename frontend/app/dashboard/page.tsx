@@ -5,713 +5,325 @@ import { supabase } from "../../lib/supabase";
 
 type Lead = {
   id: string;
-  therapist_slug: string;
   full_name: string;
   email: string;
   phone: string;
-  insurance_provider: string;
-  support_needed: string;
+  source: string;
+  service_interest: string;
+  message: string;
   status: string;
-  follow_up_note: string;
-  next_action: string;
   priority: string;
-  follow_up_date: string;
+  estimated_value: number;
   created_at: string;
-  last_updated_at: string;
 };
 
-export default function DashboardPage() {
+export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [savingId, setSavingId] = useState("");
+
+  async function loadLeads() {
+    const { data, error } = await supabase
+      .from("saas_leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+    } else {
+      setLeads(data || []);
+    }
+
+    setLoading(false);
+  }
 
   useEffect(() => {
     loadLeads();
   }, []);
 
-  async function loadLeads() {
-    const { data, error } = await supabase
-      .from("therapist_leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) console.error(error);
-    else setLeads(data || []);
-
-    setLoading(false);
-  }
-
-  function updateLocalLead(id: string, field: keyof Lead, value: string) {
-    setLeads((prev) =>
-      prev.map((lead) => (lead.id === id ? { ...lead, [field]: value } : lead))
-    );
-  }
-
-  async function updateLeadStatus(id: string, status: string) {
-    const updatedAt = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("therapist_leads")
-      .update({ status, last_updated_at: updatedAt })
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
-      alert("Status update failed.");
-      return;
-    }
-
-    setLeads((prev) =>
-      prev.map((lead) =>
-        lead.id === id ? { ...lead, status, last_updated_at: updatedAt } : lead
-      )
-    );
-  }
-
-  async function saveLeadTracking(lead: Lead) {
-    setSavingId(lead.id);
-    const updatedAt = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("therapist_leads")
-      .update({
-        follow_up_note: lead.follow_up_note || "",
-        next_action: lead.next_action || "",
-        priority: lead.priority || "warm",
-        follow_up_date: lead.follow_up_date || null,
-        last_updated_at: updatedAt,
-      })
-      .eq("id", lead.id);
-
-    if (error) {
-      console.error(error);
-      alert("Tracking failed to save.");
-      setSavingId("");
-      return;
-    }
-
-    setLeads((prev) =>
-      prev.map((item) =>
-        item.id === lead.id ? { ...item, last_updated_at: updatedAt } : item
-      )
-    );
-
-    setSavingId("");
-  }
-
-  function getFollowUpLabel(date?: string) {
-    if (!date) return null;
-
-    const today = new Date();
-    const followDate = new Date(date + "T00:00:00");
-
-    today.setHours(0, 0, 0, 0);
-
-    if (followDate < today) return "Overdue";
-    if (followDate.getTime() === today.getTime()) return "Due Today";
-
-    return "Upcoming";
-  }
-
-  function formatFollowUpDate(date?: string) {
-    if (!date) return "";
-    const parsed = new Date(date + "T00:00:00");
-    return parsed.toLocaleDateString();
-  }
-
-  function matchesSearch(lead: Lead) {
-    const query = search.toLowerCase().trim();
-
-    if (!query) return true;
-
-    return (
-      lead.full_name?.toLowerCase().includes(query) ||
-      lead.email?.toLowerCase().includes(query) ||
-      lead.phone?.toLowerCase().includes(query) ||
-      lead.insurance_provider?.toLowerCase().includes(query) ||
-      lead.support_needed?.toLowerCase().includes(query) ||
-      lead.follow_up_note?.toLowerCase().includes(query) ||
-      lead.next_action?.toLowerCase().includes(query)
-    );
-  }
-
   const totalLeads = leads.length;
-  const newLeads = leads.filter((lead) => lead.status === "new").length;
-  const contactedLeads = leads.filter((lead) => lead.status === "contacted").length;
-  const bookedLeads = leads.filter((lead) => lead.status === "booked").length;
-  const notFitLeads = leads.filter((lead) => lead.status === "not_a_fit").length;
-  const overdueLeads = leads.filter(
-    (lead) => getFollowUpLabel(lead.follow_up_date) === "Overdue"
-  ).length;
-
-  const filteredLeads = leads.filter((lead) => {
-    const statusMatch = filter === "all" || lead.status === filter;
-    return statusMatch && matchesSearch(lead);
-  });
-
-  const filters = [
-    { key: "all", label: "all", count: totalLeads },
-    { key: "new", label: "new", count: newLeads },
-    { key: "contacted", label: "contacted", count: contactedLeads },
-    { key: "booked", label: "booked", count: bookedLeads },
-    { key: "not_a_fit", label: "not a fit", count: notFitLeads },
-  ];
+  const booked = leads.filter((l) => l.status === "booked").length;
+  const newLeads = leads.filter((l) => l.status === "new").length;
+  const estimatedRevenue = leads.reduce(
+    (sum, lead) => sum + Number(lead.estimated_value || 0),
+    0
+  );
 
   return (
-    <main style={pageStyle}>
-      <section style={containerStyle}>
-        <div style={headerCardStyle}>
-          <div style={pillStyle}>TheraGrowth AI</div>
+    <main style={page}>
+      <aside style={sidebar}>
+        <div style={logo}>TG</div>
+        <h2>TheraGrowth OS</h2>
+        <p style={muted}>AI Growth Dashboard</p>
 
-          <h1 style={titleStyle}>Lead Dashboard</h1>
+        <nav style={nav}>
+          <a style={navItem}>Dashboard</a>
+          <a style={navItem}>Leads</a>
+          <a style={navItem}>AI Follow-Up</a>
+          <a style={navItem}>Chatbot</a>
+          <a style={navItem}>Revenue</a>
+          <a style={navItem}>Settings</a>
+        </nav>
+      </aside>
 
-          <p style={subtitleStyle}>
-            Manage therapist leads, follow-up notes, priority, next action, and
-            booking pipeline.
-          </p>
-
-          <div style={statsGridStyle}>
-            <StatCard title="Total Leads" value={String(totalLeads)} />
-            <StatCard title="New Leads" value={String(newLeads)} />
-            <StatCard title="Booked" value={String(bookedLeads)} />
-            <StatCard title="Overdue" value={String(overdueLeads)} />
+      <section style={content}>
+        <div style={topbar}>
+          <div>
+            <p style={eyebrow}>Practice Growth Command Center</p>
+            <h1 style={h1}>Dashboard</h1>
           </div>
+          <button style={button}>Add Lead</button>
         </div>
 
-        <div style={sectionCardStyle}>
-          <h2 style={sectionTitleStyle}>Consultation Requests</h2>
+        <div style={statsGrid}>
+          <Stat title="Total Leads" value={totalLeads.toString()} />
+          <Stat title="New Leads" value={newLeads.toString()} />
+          <Stat title="Booked Consults" value={booked.toString()} />
+          <Stat title="Estimated Revenue" value={`$${estimatedRevenue}`} />
+        </div>
 
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, phone, insurance, support need, notes..."
-            style={searchInputStyle}
-          />
-
-          <div style={filterWrapStyle}>
-            {filters.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => setFilter(item.key)}
-                style={{
-                  ...filterButtonStyle,
-                  background: filter === item.key ? "#07112f" : "#eef3ff",
-                  color: filter === item.key ? "white" : "#07112f",
-                }}
-              >
-                {item.label} ({item.count})
-              </button>
-            ))}
+        <section style={card}>
+          <div style={sectionHeader}>
+            <h2>Lead Pipeline</h2>
+            <p style={muted}>Track every inquiry from first contact to booked consultation.</p>
           </div>
-
-          <p style={resultTextStyle}>
-            Showing {filteredLeads.length} of {totalLeads} lead
-            {totalLeads === 1 ? "" : "s"}
-          </p>
 
           {loading ? (
             <p>Loading leads...</p>
-          ) : filteredLeads.length === 0 ? (
-            <p>No leads found.</p>
+          ) : leads.length === 0 ? (
+            <div style={emptyBox}>
+              <h3>No SaaS leads yet</h3>
+              <p>
+                Your TheraGrowth OS database is ready. Leads from chatbot,
+                forms, and intake systems will appear here.
+              </p>
+            </div>
           ) : (
-            <div style={{ display: "grid", gap: "22px" }}>
-              {filteredLeads.map((lead) => {
-                const followUpLabel = getFollowUpLabel(lead.follow_up_date);
+            <div style={table}>
+              <div style={tableHead}>
+                <span>Name</span>
+                <span>Email</span>
+                <span>Status</span>
+                <span>Priority</span>
+                <span>Source</span>
+                <span>Value</span>
+              </div>
 
-                return (
-                  <div key={lead.id} style={leadCardStyle}>
-                    <div style={leadTopRowStyle}>
-                      <div>
-                        <h3 style={leadNameStyle}>
-                          {lead.full_name || "Unnamed Lead"}
-                        </h3>
-                        <p style={mutedTextStyle}>
-                          Therapist: {lead.therapist_slug}
-                        </p>
-                      </div>
-
-                      <div style={badgeWrapStyle}>
-                        <div style={statusBadgeStyle}>
-                          {lead.status ? lead.status.replace("_", " ") : "new"}
-                        </div>
-
-                        <div
-                          style={{
-                            ...priorityBadgeStyle,
-                            background:
-                              lead.priority === "hot"
-                                ? "#fee2e2"
-                                : lead.priority === "cold"
-                                ? "#e0f2fe"
-                                : "#fef3c7",
-                            color:
-                              lead.priority === "hot"
-                                ? "#991b1b"
-                                : lead.priority === "cold"
-                                ? "#075985"
-                                : "#92400e",
-                          }}
-                        >
-                          {(lead.priority || "warm").toUpperCase()}
-                        </div>
-
-                        {lead.follow_up_date && (
-                          <div style={dateBadgeStyle}>
-                            Follow-up: {formatFollowUpDate(lead.follow_up_date)}
-                          </div>
-                        )}
-
-                        {followUpLabel && (
-                          <div
-                            style={{
-                              ...dueBadgeStyle,
-                              background:
-                                followUpLabel === "Overdue"
-                                  ? "#fee2e2"
-                                  : followUpLabel === "Due Today"
-                                  ? "#dcfce7"
-                                  : "#eef3ff",
-                              color:
-                                followUpLabel === "Overdue"
-                                  ? "#991b1b"
-                                  : followUpLabel === "Due Today"
-                                  ? "#166534"
-                                  : "#1e3a8a",
-                            }}
-                          >
-                            {followUpLabel}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={infoGridStyle}>
-                      <InfoBox title="Email" value={lead.email} />
-                      <InfoBox title="Phone" value={lead.phone} />
-                      <InfoBox title="Insurance" value={lead.insurance_provider} />
-                    </div>
-
-                    <div style={supportBoxStyle}>
-                      <strong>Support Needed:</strong>
-                      <p style={supportTextStyle}>
-                        {lead.support_needed || "No message provided."}
-                      </p>
-                    </div>
-
-                    <div style={crmGridStyle}>
-                      <div>
-                        <label style={labelStyle}>Priority</label>
-                        <select
-                          value={lead.priority || "warm"}
-                          onChange={(e) =>
-                            updateLocalLead(lead.id, "priority", e.target.value)
-                          }
-                          style={inputStyle}
-                        >
-                          <option value="hot">Hot</option>
-                          <option value="warm">Warm</option>
-                          <option value="cold">Cold</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label style={labelStyle}>Follow-up Date</label>
-                        <input
-                          type="date"
-                          value={lead.follow_up_date || ""}
-                          onChange={(e) =>
-                            updateLocalLead(
-                              lead.id,
-                              "follow_up_date",
-                              e.target.value
-                            )
-                          }
-                          style={inputStyle}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={crmGridStyle}>
-                      <div>
-                        <label style={labelStyle}>Follow-up Note</label>
-                        <textarea
-                          value={lead.follow_up_note || ""}
-                          onChange={(e) =>
-                            updateLocalLead(
-                              lead.id,
-                              "follow_up_note",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Example: Called client, left voicemail, asked for insurance card..."
-                          rows={4}
-                          style={textAreaStyle}
-                        />
-                      </div>
-
-                      <div>
-                        <label style={labelStyle}>Next Action</label>
-                        <textarea
-                          value={lead.next_action || ""}
-                          onChange={(e) =>
-                            updateLocalLead(
-                              lead.id,
-                              "next_action",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Example: Follow up tomorrow, send intake form, verify insurance..."
-                          rows={4}
-                          style={textAreaStyle}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={actionRowStyle}>
-                      <button
-                        onClick={() => saveLeadTracking(lead)}
-                        style={saveButtonStyle}
-                      >
-                        {savingId === lead.id ? "Saving..." : "Save Tracking"}
-                      </button>
-
-                      <button
-                        onClick={() => updateLeadStatus(lead.id, "contacted")}
-                        style={secondaryActionStyle}
-                      >
-                        Mark Contacted
-                      </button>
-
-                      <button
-                        onClick={() => updateLeadStatus(lead.id, "booked")}
-                        style={secondaryActionStyle}
-                      >
-                        Mark Booked
-                      </button>
-
-                      <button
-                        onClick={() => updateLeadStatus(lead.id, "not_a_fit")}
-                        style={dangerActionStyle}
-                      >
-                        Mark Not a Fit
-                      </button>
-                    </div>
-
-                    <p style={dateTextStyle}>
-                      Submitted: {new Date(lead.created_at).toLocaleString()}
-                    </p>
-
-                    {lead.last_updated_at && (
-                      <p style={dateTextStyle}>
-                        Last updated:{" "}
-                        {new Date(lead.last_updated_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+              {leads.map((lead) => (
+                <div key={lead.id} style={tableRow}>
+                  <span>{lead.full_name || "Unknown"}</span>
+                  <span>{lead.email || "-"}</span>
+                  <span style={pill}>{lead.status || "new"} </span>
+                  <span>{lead.priority || "warm"}</span>
+                  <span>{lead.source || "website"}</span>
+                  <span>${lead.estimated_value || 0}</span>
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </section>
+
+        <section style={grid2}>
+          <div style={card}>
+            <h2>AI Follow-Up Writer</h2>
+            <p style={muted}>
+              Generate warm replies, no-response follow-ups, and consultation reminders.
+            </p>
+            <button style={button}>Open AI Writer</button>
+          </div>
+
+          <div style={card}>
+            <h2>Growth Score</h2>
+            <p style={score}>72%</p>
+            <p style={muted}>
+              Based on lead response speed, follow-up activity, website clarity, and inquiry volume.
+            </p>
+          </div>
+        </section>
       </section>
     </main>
   );
 }
 
-function StatCard({ title, value }: { title: string; value: string }) {
+function Stat({ title, value }: { title: string; value: string }) {
   return (
-    <div style={statCardStyle}>
-      <div style={{ fontSize: "16px", opacity: 0.9 }}>{title}</div>
-      <div style={statValueStyle}>{value}</div>
+    <div style={statCard}>
+      <p style={muted}>{title}</p>
+      <h2 style={statValue}>{value}</h2>
     </div>
   );
 }
 
-function InfoBox({ title, value }: { title: string; value?: string }) {
-  return (
-    <div style={infoBoxStyle}>
-      <div style={infoTitleStyle}>{title}</div>
-      <div>{value || "-"}</div>
-    </div>
-  );
-}
+const gold = "#b8892e";
+const black = "#111111";
+const cream = "#f7f1e8";
+const soft = "#fffaf2";
 
-const pageStyle = {
+const page = {
   minHeight: "100vh",
-  background: "#f4f6fb",
-  padding: "60px 24px",
+  display: "grid",
+  gridTemplateColumns: "280px 1fr",
+  background: cream,
+  color: black,
   fontFamily: "Arial, sans-serif",
-  color: "#07112f",
 } as const;
 
-const containerStyle = {
-  maxWidth: "1200px",
-  margin: "0 auto",
-  display: "grid",
-  gap: "32px",
-} as const;
-
-const headerCardStyle = {
-  background: "white",
-  borderRadius: "28px",
-  padding: "42px",
-} as const;
-
-const pillStyle = {
-  display: "inline-block",
-  background: "#eef3ff",
-  padding: "10px 18px",
-  borderRadius: "999px",
-  fontWeight: 700,
-  marginBottom: "20px",
-} as const;
-
-const titleStyle = {
-  fontSize: "64px",
-  lineHeight: "1",
-  margin: 0,
-  fontWeight: 900,
-} as const;
-
-const subtitleStyle = {
-  fontSize: "18px",
-  marginTop: "18px",
-  color: "#334155",
-} as const;
-
-const statsGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-  gap: "18px",
-  marginTop: "32px",
-} as const;
-
-const statCardStyle = {
-  background: "#07112f",
+const sidebar = {
+  background: black,
   color: "white",
-  borderRadius: "22px",
-  padding: "28px",
+  padding: 28,
+  minHeight: "100vh",
 } as const;
 
-const statValueStyle = {
-  fontSize: "50px",
-  fontWeight: 900,
-  marginTop: "12px",
-} as const;
-
-const sectionCardStyle = {
-  background: "white",
-  borderRadius: "28px",
-  padding: "36px",
-} as const;
-
-const sectionTitleStyle = {
-  fontSize: "34px",
-  marginTop: 0,
-  marginBottom: "20px",
-  fontWeight: 900,
-} as const;
-
-const searchInputStyle = {
-  width: "100%",
-  border: "1px solid #dbe4ff",
-  borderRadius: "18px",
-  padding: "16px 18px",
-  fontSize: "16px",
-  outline: "none",
-  marginBottom: "18px",
-} as const;
-
-const filterWrapStyle = {
+const logo = {
+  width: 64,
+  height: 64,
+  borderRadius: "50%",
+  background: gold,
+  color: black,
   display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
-  marginBottom: "12px",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: "Georgia, serif",
+  fontSize: 28,
+  fontWeight: 900,
+  marginBottom: 20,
 } as const;
 
-const filterButtonStyle = {
-  border: "none",
-  padding: "10px 16px",
-  borderRadius: "999px",
+const nav = {
+  display: "grid",
+  gap: 12,
+  marginTop: 35,
+} as const;
+
+const navItem = {
+  padding: "14px 16px",
+  borderRadius: 14,
+  background: "#1d1d1d",
+  color: "white",
   fontWeight: 800,
+} as const;
+
+const content = {
+  padding: 40,
+} as const;
+
+const topbar = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 30,
+} as const;
+
+const eyebrow = {
+  color: gold,
+  textTransform: "uppercase",
+  letterSpacing: 2,
+  fontWeight: 900,
+} as const;
+
+const h1 = {
+  fontFamily: "Georgia, serif",
+  fontSize: 60,
+  margin: 0,
+} as const;
+
+const button = {
+  background: black,
+  color: "white",
+  border: "none",
+  borderRadius: 14,
+  padding: "15px 22px",
+  fontWeight: 900,
   cursor: "pointer",
 } as const;
 
-const resultTextStyle = {
-  color: "#64748b",
-  fontWeight: 700,
-  marginBottom: "24px",
+const statsGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: 18,
+  marginBottom: 28,
 } as const;
 
-const leadCardStyle = {
-  border: "1px solid #dbe4ff",
-  borderRadius: "22px",
-  padding: "24px",
+const statCard = {
+  background: soft,
+  border: "1px solid #e1cfb3",
+  borderRadius: 24,
+  padding: 24,
 } as const;
 
-const leadTopRowStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "20px",
-  flexWrap: "wrap",
+const statValue = {
+  fontFamily: "Georgia, serif",
+  fontSize: 42,
+  color: gold,
+  margin: "8px 0 0",
 } as const;
 
-const leadNameStyle = {
-  margin: 0,
-  fontSize: "24px",
+const card = {
+  background: soft,
+  border: "1px solid #e1cfb3",
+  borderRadius: 28,
+  padding: 28,
+  marginBottom: 24,
+} as const;
+
+const sectionHeader = {
+  marginBottom: 20,
+} as const;
+
+const muted = {
+  color: "#6b5b48",
+  lineHeight: 1.6,
+} as const;
+
+const emptyBox = {
+  border: "1px dashed #d7c4a8",
+  borderRadius: 20,
+  padding: 30,
+  background: "#fff8ed",
+} as const;
+
+const table = {
+  display: "grid",
+  gap: 10,
+} as const;
+
+const tableHead = {
+  display: "grid",
+  gridTemplateColumns: "1.2fr 1.5fr 1fr 1fr 1fr 1fr",
   fontWeight: 900,
+  padding: 14,
+  background: "#eadfce",
+  borderRadius: 14,
 } as const;
 
-const mutedTextStyle = {
-  marginTop: "8px",
-  color: "#64748b",
-} as const;
-
-const badgeWrapStyle = {
-  display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
+const tableRow = {
+  display: "grid",
+  gridTemplateColumns: "1.2fr 1.5fr 1fr 1fr 1fr 1fr",
+  padding: 14,
+  background: "white",
+  borderRadius: 14,
   alignItems: "center",
 } as const;
 
-const statusBadgeStyle = {
-  background: "#dcfce7",
-  color: "#166534",
-  padding: "10px 16px",
-  borderRadius: "999px",
-  fontWeight: 900,
-  height: "fit-content",
-  textTransform: "capitalize",
-} as const;
-
-const priorityBadgeStyle = {
-  padding: "10px 16px",
-  borderRadius: "999px",
-  fontWeight: 900,
-  height: "fit-content",
-} as const;
-
-const dateBadgeStyle = {
-  padding: "10px 16px",
-  borderRadius: "999px",
-  background: "#eef2ff",
-  color: "#1e3a8a",
-  fontWeight: 900,
-  height: "fit-content",
-} as const;
-
-const dueBadgeStyle = {
-  padding: "10px 16px",
-  borderRadius: "999px",
-  fontWeight: 900,
-  height: "fit-content",
-} as const;
-
-const infoGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-  gap: "14px",
-  marginTop: "22px",
-} as const;
-
-const infoBoxStyle = {
-  border: "1px solid #dbe4ff",
-  borderRadius: "18px",
-  padding: "18px",
-} as const;
-
-const infoTitleStyle = {
-  fontWeight: 800,
-  marginBottom: "10px",
-  color: "#475569",
-} as const;
-
-const supportBoxStyle = {
-  marginTop: "18px",
-  background: "#f8fafc",
-  borderRadius: "18px",
-  padding: "18px",
-} as const;
-
-const supportTextStyle = {
-  marginTop: "10px",
-  marginBottom: 0,
-  color: "#334155",
-} as const;
-
-const crmGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-  gap: "16px",
-  marginTop: "18px",
-} as const;
-
-const labelStyle = {
-  display: "block",
-  fontWeight: 900,
-  marginBottom: "8px",
-} as const;
-
-const inputStyle = {
-  width: "100%",
-  border: "1px solid #dbe4ff",
-  borderRadius: "16px",
-  padding: "14px",
-  fontSize: "15px",
-  outline: "none",
-  background: "white",
-} as const;
-
-const textAreaStyle = {
-  width: "100%",
-  border: "1px solid #dbe4ff",
-  borderRadius: "16px",
-  padding: "14px",
-  fontSize: "15px",
-  outline: "none",
-} as const;
-
-const actionRowStyle = {
-  display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
-  marginTop: "18px",
-} as const;
-
-const saveButtonStyle = {
-  background: "#07112f",
+const pill = {
+  background: black,
   color: "white",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "14px",
-  fontWeight: 900,
-  cursor: "pointer",
+  borderRadius: 999,
+  padding: "6px 10px",
+  width: "fit-content",
+  fontWeight: 800,
 } as const;
 
-const secondaryActionStyle = {
-  background: "#eef3ff",
-  color: "#07112f",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "14px",
-  fontWeight: 900,
-  cursor: "pointer",
+const grid2 = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 24,
 } as const;
 
-const dangerActionStyle = {
-  background: "#fee2e2",
-  color: "#991b1b",
-  border: "none",
-  padding: "12px 18px",
-  borderRadius: "14px",
+const score = {
+  fontFamily: "Georgia, serif",
+  color: gold,
+  fontSize: 70,
   fontWeight: 900,
-  cursor: "pointer",
-} as const;
-
-const dateTextStyle = {
-  marginTop: "14px",
-  fontSize: "14px",
-  color: "#94a3b8",
+  margin: "10px 0",
 } as const;
