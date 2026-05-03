@@ -25,12 +25,12 @@ export async function POST(req: Request) {
 
     if (!formspreeUrl) {
       return NextResponse.json(
-        { success: false, message: "Form endpoint not configured." },
+        { success: false, message: "Formspree endpoint is not configured." },
         { status: 500 }
       );
     }
 
-    const response = await fetch(formspreeUrl, {
+    const formspreeResponse = await fetch(formspreeUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,13 +45,12 @@ export async function POST(req: Request) {
         website,
         budget,
         challenge,
-        sentTo: "hello@theragrowth-ai.com",
       }),
     });
 
-    if (!response.ok) {
+    if (!formspreeResponse.ok) {
       return NextResponse.json(
-        { success: false, message: "Email service failed." },
+        { success: false, message: "Formspree email service failed." },
         { status: 500 }
       );
     }
