@@ -1,229 +1,115 @@
-"use client";
-
-import { useState } from "react";
-
-export default function HomePage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    practice: "",
-    website: "",
-    budget: "$99/mo SaaS",
-    challenge: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-
-  function updateField(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  async function handleAuditSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const response = await fetch("/api/audit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage("✅ Request submitted successfully.");
-        setForm({
-          name: "",
-          email: "",
-          phone: "",
-          practice: "",
-          website: "",
-          budget: "$99/mo SaaS",
-          challenge: "",
-        });
-      } else {
-        setMessage("❌ " + (data.message || "Something went wrong."));
-      }
-    } catch (error) {
-      setMessage("❌ Server error.");
-    }
-
-    setLoading(false);
-  }
+export default function DashboardPage() {
+  const leads = [
+    {
+      name: "Test Lead",
+      email: "adesojilanre2@yahoo.com",
+      phone: "5555555555",
+      niche: "Anxiety Therapy",
+      plan: "$99/mo SaaS",
+      status: "New Lead",
+      nextAction: "Send audit reply",
+    },
+  ];
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#f8f4ea",
-        padding: "60px 8%",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <main style={{ minHeight: "100vh", background: "#f8f4ea", padding: "50px 8%" }}>
+      <h1 style={{ fontFamily: "Georgia, serif", fontSize: 64, marginBottom: 10 }}>
+        TheraGrowth CRM Dashboard
+      </h1>
+
+      <p style={{ fontSize: 20, marginBottom: 30 }}>
+        Track audit requests, follow-ups, and therapist leads.
+      </p>
+
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "50px",
-          alignItems: "start",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 20,
+          marginBottom: 40,
         }}
       >
-        {/* LEFT SIDE */}
-        <div>
-          <p
-            style={{
-              color: "#b88a1b",
-              fontWeight: 700,
-              letterSpacing: 2,
-              fontSize: 14,
-            }}
-          >
-            FREE AUDIT
-          </p>
-
-          <h1
-            style={{
-              fontSize: 72,
-              lineHeight: 1,
-              margin: "10px 0 20px",
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            Request Your
-            <br />
-            Free Practice
-            <br />
-            Growth Audit
-          </h1>
-
-          <p style={{ fontSize: 22, lineHeight: 1.6, maxWidth: 560 }}>
-            Submit your practice details and we’ll review your website,
-            funnel, and client acquisition system.
-          </p>
-        </div>
-
-        {/* RIGHT SIDE */}
-        <div>
-          <form
-            onSubmit={handleAuditSubmit}
-            style={{
-              display: "grid",
-              gap: 16,
-            }}
-          >
-            <input
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={updateField}
-              required
-              style={inputStyle}
-            />
-
-            <input
-              name="email"
-              type="email"
-              placeholder="Business Email"
-              value={form.email}
-              onChange={updateField}
-              required
-              style={inputStyle}
-            />
-
-            <input
-              name="phone"
-              placeholder="Phone Number"
-              value={form.phone}
-              onChange={updateField}
-              required
-              style={inputStyle}
-            />
-
-            <input
-              name="practice"
-              placeholder="Therapy Niche"
-              value={form.practice}
-              onChange={updateField}
-              required
-              style={inputStyle}
-            />
-
-            <input
-              name="website"
-              placeholder="Website URL"
-              value={form.website}
-              onChange={updateField}
-              style={inputStyle}
-            />
-
-            <select
-              name="budget"
-              value={form.budget}
-              onChange={updateField}
-              style={inputStyle}
-            >
-              <option>$99/mo SaaS</option>
-              <option>$299/mo Growth</option>
-              <option>$999/mo Full Service</option>
-            </select>
-
-            <textarea
-              name="challenge"
-              placeholder="What do you need help with?"
-              value={form.challenge}
-              onChange={updateField}
-              rows={5}
-              style={inputStyle}
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                background: "black",
-                color: "white",
-                border: "none",
-                padding: 18,
-                borderRadius: 14,
-                fontWeight: 800,
-                fontSize: 20,
-                cursor: "pointer",
-              }}
-            >
-              {loading ? "Submitting..." : "Submit Free Audit Request"}
-            </button>
-
-            {message && (
-              <p
-                style={{
-                  marginTop: 8,
-                  fontWeight: 700,
-                  color: message.includes("✅") ? "green" : "#b8860b",
-                }}
-              >
-                {message}
-              </p>
-            )}
-          </form>
-        </div>
+        <Card title="New Leads" value="1" />
+        <Card title="Follow-Ups Due" value="1" />
+        <Card title="Booked Calls" value="0" />
+        <Card title="Potential MRR" value="$99" />
       </div>
+
+      <section
+        style={{
+          background: "white",
+          border: "1px solid #d7c4a8",
+          borderRadius: 24,
+          padding: 30,
+        }}
+      >
+        <h2 style={{ fontSize: 32, marginBottom: 20 }}>Lead Pipeline</h2>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 16 }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
+              <th style={th}>Name</th>
+              <th style={th}>Email</th>
+              <th style={th}>Phone</th>
+              <th style={th}>Niche</th>
+              <th style={th}>Plan</th>
+              <th style={th}>Status</th>
+              <th style={th}>Next Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {leads.map((lead, index) => (
+              <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={td}>{lead.name}</td>
+                <td style={td}>{lead.email}</td>
+                <td style={td}>{lead.phone}</td>
+                <td style={td}>{lead.niche}</td>
+                <td style={td}>{lead.plan}</td>
+                <td style={td}>
+                  <span
+                    style={{
+                      background: "#111",
+                      color: "white",
+                      padding: "6px 12px",
+                      borderRadius: 999,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {lead.status}
+                  </span>
+                </td>
+                <td style={td}>{lead.nextAction}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: 18,
-  borderRadius: 14,
-  border: "1px solid #d6c29a",
-  background: "#fff",
-  fontSize: 17,
+function Card({ title, value }: { title: string; value: string }) {
+  return (
+    <div
+      style={{
+        background: "#111",
+        color: "white",
+        borderRadius: 22,
+        padding: 26,
+      }}
+    >
+      <p style={{ color: "#c7962b", fontWeight: 800 }}>{title}</p>
+      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 48 }}>{value}</h2>
+    </div>
+  );
+}
+
+const th = {
+  padding: "14px 10px",
+  fontWeight: 900,
+} as const;
+
+const td = {
+  padding: "16px 10px",
 } as const;
