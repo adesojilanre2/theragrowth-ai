@@ -2,18 +2,8 @@
 
 import React, { useState } from "react";
 
-type AuditForm = {
-  name: string;
-  email: string;
-  phone: string;
-  practice: string;
-  website: string;
-  budget: string;
-  challenge: string;
-};
-
 export default function HomePage() {
-  const [form, setForm] = useState<AuditForm>({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
@@ -62,7 +52,7 @@ export default function HomePage() {
       } else {
         setMessage(`❌ ${data.message || "Something went wrong."}`);
       }
-    } catch (error) {
+    } catch {
       setMessage("❌ Server error.");
     } finally {
       setLoading(false);
@@ -75,7 +65,7 @@ export default function HomePage() {
         <div style={brandWrap}>
           <div style={logo}>TG</div>
           <div>
-            <strong>TheraGrowth AI</strong>
+            <h1 style={brand}>TheraGrowth AI</h1>
             <p style={tagline}>SaaS Growth System for Therapists</p>
           </div>
         </div>
@@ -85,37 +75,36 @@ export default function HomePage() {
           <a href="#pricing" style={navLink}>SaaS Pricing</a>
           <a href="#signup" style={navLink}>Signup</a>
           <a href="#dashboard" style={navLink}>Dashboard</a>
-          <a href="#audit" style={auditButton}>Free Audit</a>
+          <a href="#audit" style={auditNav}>Free Audit</a>
         </nav>
       </header>
 
       <section style={hero}>
         <div>
-          <p style={eyebrow}>AI CHAT • CRM • FOLLOW-UP • SAAS DASHBOARD</p>
-          <h1 style={heroTitle}>
+          <p style={eyebrow}>AI CHAT • FOLLOW-UP • CLIENT ACQUISITION SYSTEM</p>
+          <h2 style={heroTitle}>
             Turn Your Therapy Website Into a Private-Pay Client Machine
-          </h1>
+          </h2>
           <p style={heroText}>
             TheraGrowth AI helps therapists capture leads, follow up faster,
-            track inquiries, and convert more website visitors into booked
-            consultations.
+            track inquiries, and convert more website visitors into booked consultations.
           </p>
           <a href="#audit" style={primaryButton}>Request Free Audit</a>
         </div>
 
         <div style={heroCard}>
-          <div style={logoSmall}>TG</div>
-          <h2 style={cardTitle}>
+          <div style={logo}>TG</div>
+          <h3 style={heroCardTitle}>
             A complete client acquisition engine for private practices.
-          </h2>
-          <ul style={list}>
-            <li>Lead capture dashboard</li>
-            <li>CRM pipeline tracking</li>
-            <li>AI follow-up writer</li>
+          </h3>
+          <ul style={heroList}>
+            <li>Lead capture system</li>
+            <li>Client inquiry tracking</li>
+            <li>AI follow-up support</li>
             <li>Monthly SaaS plans</li>
-            <li>Stripe subscription billing</li>
+            <li>Stripe payment links</li>
           </ul>
-          <a href="#pricing" style={darkButton}>Start Monthly SaaS</a>
+          <a href="#pricing" style={primaryButton}>Start Monthly SaaS</a>
         </div>
       </section>
 
@@ -141,7 +130,7 @@ export default function HomePage() {
           </div>
 
           <div style={card}>
-            <h3>CRM Follow-Up System</h3>
+            <h3>Client Follow-Up System</h3>
             <p>
               Track every inquiry, next action, lead status, and follow-up date
               so no client is forgotten.
@@ -151,26 +140,75 @@ export default function HomePage() {
       </section>
 
       <section id="pricing" style={darkSection}>
-        <p style={eyebrowGold}>SAAS PRICING</p>
+        <p style={eyebrow}>SAAS PRICING</p>
         <h2 style={darkTitle}>Simple Monthly Growth Plans</h2>
 
-        <div style={grid3}>
+        <div style={pricingGrid}>
           <div style={priceCard}>
             <h3>Starter</h3>
             <h2>$99/mo</h2>
-            <p>Lead capture + basic CRM.</p>
+            <p>Capture and convert more private-pay client inquiries automatically.</p>
+
+            <ul style={list}>
+              <li>Lead capture system</li>
+              <li>Client inquiry tracking</li>
+              <li>Follow-up support</li>
+              <li>Practice growth audit included</li>
+            </ul>
+
+            <a
+              href="https://buy.stripe.com/8x28wR8eVd12beV4df2sM06"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={payButton}
+            >
+              Start Starter Plan
+            </a>
           </div>
 
-          <div style={priceCard}>
+          <div style={{ ...priceCard, border: "2px solid #c7962b" }}>
+            <p style={badge}>MOST POPULAR</p>
             <h3>Growth</h3>
             <h2>$299/mo</h2>
-            <p>CRM + AI follow-up + audit support.</p>
+            <p>Scale your practice with a complete client acquisition system.</p>
+
+            <ul style={list}>
+              <li>Everything in Starter</li>
+              <li>AI follow-up support</li>
+              <li>Lead conversion tracking</li>
+              <li>Monthly growth optimization</li>
+            </ul>
+
+            <a
+              href="https://buy.stripe.com/3cI6oJdzff9a1ElfVX2sM09"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={payButton}
+            >
+              Start Growth Plan
+            </a>
           </div>
 
           <div style={priceCard}>
             <h3>Done-With-You</h3>
             <h2>$750+</h2>
-            <p>Website optimization + full growth system setup.</p>
+            <p>We help build and optimize your full client acquisition system.</p>
+
+            <ul style={list}>
+              <li>Website funnel optimization</li>
+              <li>Lead capture setup</li>
+              <li>Follow-up system setup</li>
+              <li>1:1 implementation support</li>
+            </ul>
+
+            <a
+              href="https://buy.stripe.com/dRmaEZ8eVf9a82JfVX2sM0a"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={payButton}
+            >
+              Get Done-With-You Setup
+            </a>
           </div>
         </div>
       </section>
@@ -197,24 +235,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="dashboard" style={sectionSoft}>
+      <section id="dashboard" style={dashboardSection}>
         <p style={eyebrow}>DASHBOARD</p>
-        <h2 style={sectionTitle}>TheraGrowth CRM Dashboard</h2>
+        <h2 style={sectionTitle}>TheraGrowth Client Acquisition Dashboard</h2>
 
-        <div style={dashboardBox}>
-          <div style={statCard}>
+        <div style={grid3}>
+          <div style={card}>
             <h3>New Leads</h3>
-            <strong>0</strong>
+            <h2>0</h2>
           </div>
 
-          <div style={statCard}>
+          <div style={card}>
             <h3>Follow-Ups Due</h3>
-            <strong>0</strong>
+            <h2>0</h2>
           </div>
 
-          <div style={statCard}>
+          <div style={card}>
             <h3>Booked Calls</h3>
-            <strong>0</strong>
+            <h2>0</h2>
           </div>
         </div>
       </section>
@@ -231,69 +269,71 @@ export default function HomePage() {
 
         <form onSubmit={handleAuditSubmit} style={formStyle}>
           <input
-            style={input}
             name="name"
-            placeholder="Full Name"
             value={form.name}
             onChange={updateField}
+            placeholder="Full Name"
             required
+            style={input}
           />
 
           <input
-            style={input}
             name="email"
             type="email"
-            placeholder="Business Email"
             value={form.email}
             onChange={updateField}
+            placeholder="Business Email"
             required
+            style={input}
           />
 
           <input
-            style={input}
             name="phone"
-            placeholder="Phone Number"
             value={form.phone}
             onChange={updateField}
+            placeholder="Phone Number"
+            style={input}
           />
 
           <input
-            style={input}
             name="practice"
-            placeholder="Therapy Niche"
             value={form.practice}
             onChange={updateField}
+            placeholder="Therapy Niche"
+            required
+            style={input}
           />
 
           <input
-            style={input}
             name="website"
-            placeholder="Website URL"
             value={form.website}
             onChange={updateField}
+            placeholder="Website URL"
+            style={input}
           />
 
           <select
-            style={input}
             name="budget"
             value={form.budget}
             onChange={updateField}
+            style={input}
           >
             <option>Free Audit Only</option>
-            <option>$99/mo SaaS</option>
-            <option>$299/mo Growth Plan</option>
-            <option>$750+ Done-With-You Setup</option>
+            <option>$99/mo Starter</option>
+            <option>$299/mo Growth</option>
+            <option>$750+ Done-With-You</option>
           </select>
 
           <textarea
-            style={textarea}
             name="challenge"
-            placeholder="What do you need help with?"
             value={form.challenge}
             onChange={updateField}
+            placeholder="What do you need help with?"
+            required
+            style={textarea}
           />
 
-          <button type="submit" style={submitButton} disabled={loading}>
+          <button type="submit" disabled={loading} style={submitBtn}>
             {loading ? "Submitting..." : "Submit Free Audit Request"}
           </button>
 
@@ -305,7 +345,7 @@ export default function HomePage() {
         <strong>TheraGrowth AI</strong>
         <p>
           Helping therapists get more private-pay clients through SaaS, AI chat,
-          CRM, follow-up, and growth systems.
+          follow-up, and growth systems.
         </p>
 
         <p style={{ marginTop: 16 }}>
@@ -319,7 +359,7 @@ export default function HomePage() {
           </a>
         </p>
 
-        <p style={{ marginTop: 8 }}>
+        <p>
           Email:{" "}
           <a href="mailto:hello@theragrowth-ai.com" style={footerLink}>
             hello@theragrowth-ai.com
@@ -330,266 +370,256 @@ export default function HomePage() {
   );
 }
 
-const gold = "#c7962b";
-const cream = "#fffaf2";
-const black = "#111";
-const border = "#d7c4a8";
-
-const page: React.CSSProperties = {
-  background: cream,
-  color: black,
+const page = {
+  background: "#fffaf2",
+  color: "#111",
+  minHeight: "100vh",
   fontFamily: "Arial, sans-serif",
-};
+} as const;
 
-const header: React.CSSProperties = {
+const header = {
   position: "sticky",
   top: 0,
-  zIndex: 50,
-  background: cream,
-  borderBottom: `1px solid ${border}`,
-  padding: "24px 6%",
+  zIndex: 10,
+  background: "#fffaf2",
+  borderBottom: "1px solid #d7c4a8",
+  padding: "28px 6%",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-};
+  gap: 24,
+} as const;
 
-const brandWrap: React.CSSProperties = {
+const brandWrap = {
   display: "flex",
   alignItems: "center",
   gap: 14,
-};
+} as const;
 
-const logo: React.CSSProperties = {
-  width: 64,
-  height: 64,
+const logo = {
+  width: 70,
+  height: 70,
   borderRadius: "50%",
-  background: black,
-  color: gold,
+  background: "#111",
+  color: "#c7962b",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: "Georgia, serif",
   fontSize: 28,
   fontWeight: 900,
-};
+} as const;
 
-const logoSmall: React.CSSProperties = {
-  width: 72,
-  height: 72,
-  borderRadius: "50%",
-  background: black,
-  color: gold,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontFamily: "Georgia, serif",
-  fontSize: 30,
+const brand = {
+  margin: 0,
+  fontSize: 20,
   fontWeight: 900,
-  marginBottom: 24,
-};
+} as const;
 
-const tagline: React.CSSProperties = {
+const tagline = {
   margin: 0,
   color: "#555",
-};
+  fontSize: 16,
+} as const;
 
-const nav: React.CSSProperties = {
+const nav = {
   display: "flex",
-  gap: 24,
+  gap: 26,
   alignItems: "center",
   flexWrap: "wrap",
-};
+} as const;
 
-const navLink: React.CSSProperties = {
-  color: black,
+const navLink = {
+  color: "#111",
   fontWeight: 900,
   textDecoration: "none",
-};
+} as const;
 
-const auditButton: React.CSSProperties = {
-  color: black,
-  border: `1px solid ${border}`,
-  borderRadius: 999,
+const auditNav = {
+  color: "#111",
+  fontWeight: 900,
+  textDecoration: "none",
+  border: "1px solid #d7c4a8",
+  borderRadius: 30,
   padding: "14px 24px",
-  fontWeight: 900,
-  textDecoration: "none",
-};
+} as const;
 
-const hero: React.CSSProperties = {
-  padding: "100px 6%",
+const hero = {
   display: "grid",
-  gridTemplateColumns: "1.2fr 0.8fr",
+  gridTemplateColumns: "1.3fr .8fr",
   gap: 60,
+  padding: "100px 6%",
   alignItems: "center",
-};
+} as const;
 
-const eyebrow: React.CSSProperties = {
-  color: gold,
+const eyebrow = {
+  color: "#c7962b",
   fontWeight: 900,
-  letterSpacing: 4,
-};
+  letterSpacing: 5,
+  fontSize: 16,
+} as const;
 
-const eyebrowGold: React.CSSProperties = {
-  color: gold,
-  fontWeight: 900,
-  letterSpacing: 4,
-};
-
-const heroTitle: React.CSSProperties = {
+const heroTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 82,
+  fontSize: 76,
   lineHeight: 1,
   margin: "20px 0",
-};
+} as const;
 
-const heroText: React.CSSProperties = {
+const heroText = {
   fontSize: 20,
   lineHeight: 1.7,
-  maxWidth: 760,
-};
+  color: "#23344d",
+} as const;
 
-const heroCard: React.CSSProperties = {
-  background: "#fffaf5",
-  border: `1px solid ${border}`,
-  borderRadius: 28,
-  padding: 42,
-};
-
-const cardTitle: React.CSSProperties = {
-  fontFamily: "Georgia, serif",
-  fontSize: 34,
-  lineHeight: 1.15,
-};
-
-const list: React.CSSProperties = {
-  lineHeight: 2,
-  fontSize: 17,
-};
-
-const primaryButton: React.CSSProperties = {
+const primaryButton = {
   display: "inline-block",
-  marginTop: 24,
-  background: black,
+  marginTop: 20,
+  background: "#111",
   color: "white",
   padding: "18px 28px",
   borderRadius: 14,
   textDecoration: "none",
   fontWeight: 900,
-};
+} as const;
 
-const darkButton: React.CSSProperties = {
-  display: "inline-block",
-  marginTop: 20,
-  background: black,
-  color: "white",
-  padding: "16px 24px",
-  borderRadius: 14,
-  textDecoration: "none",
-  fontWeight: 900,
-};
-
-const section: React.CSSProperties = {
-  padding: "80px 6%",
-};
-
-const sectionSoft: React.CSSProperties = {
-  padding: "80px 6%",
-  background: "#fff5e6",
-};
-
-const sectionTitle: React.CSSProperties = {
-  fontFamily: "Georgia, serif",
-  fontSize: 54,
-  margin: "10px 0 30px",
-};
-
-const grid3: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-  gap: 24,
-};
-
-const card: React.CSSProperties = {
+const heroCard = {
   background: "white",
-  border: `1px solid ${border}`,
-  borderRadius: 24,
-  padding: 30,
-  fontSize: 17,
-  lineHeight: 1.7,
-};
+  border: "1px solid #d7c4a8",
+  borderRadius: 28,
+  padding: 42,
+} as const;
 
-const darkSection: React.CSSProperties = {
-  padding: "80px 6%",
-  background: black,
-  color: "white",
-};
-
-const darkTitle: React.CSSProperties = {
+const heroCardTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 54,
-};
+  fontSize: 34,
+  lineHeight: 1.1,
+} as const;
 
-const priceCard: React.CSSProperties = {
+const heroList = {
+  lineHeight: 2,
+  fontSize: 17,
+} as const;
+
+const section = {
+  padding: "90px 6%",
+} as const;
+
+const sectionTitle = {
+  fontFamily: "Georgia, serif",
+  fontSize: 56,
+  lineHeight: 1.1,
+} as const;
+
+const grid3 = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: 24,
+  marginTop: 34,
+} as const;
+
+const card = {
+  background: "white",
+  border: "1px solid #d7c4a8",
+  borderRadius: 24,
+  padding: 32,
+  fontSize: 18,
+  lineHeight: 1.6,
+} as const;
+
+const darkSection = {
+  background: "#111",
+  color: "white",
+  padding: "90px 6%",
+} as const;
+
+const darkTitle = {
+  fontFamily: "Georgia, serif",
+  fontSize: 56,
+  lineHeight: 1.1,
+  color: "white",
+} as const;
+
+const pricingGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gap: 24,
+  marginTop: 40,
+} as const;
+
+const priceCard = {
   background: "#1b1b1b",
   border: "1px solid #333",
   borderRadius: 24,
-  padding: 30,
-};
+  padding: 32,
+  color: "white",
+} as const;
 
-const dashboardBox: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: 24,
-};
+const list = {
+  lineHeight: 1.9,
+  marginTop: 18,
+  marginBottom: 28,
+} as const;
 
-const statCard: React.CSSProperties = {
-  background: "white",
-  border: `1px solid ${border}`,
-  borderRadius: 24,
-  padding: 30,
-};
+const payButton = {
+  display: "inline-block",
+  background: "#c7962b",
+  color: "black",
+  padding: "14px 22px",
+  borderRadius: 14,
+  fontWeight: 900,
+  textDecoration: "none",
+} as const;
 
-const auditSection: React.CSSProperties = {
-  padding: "100px 6%",
+const badge = {
+  color: "#c7962b",
+  fontWeight: 900,
+  letterSpacing: 2,
+  marginBottom: 12,
+} as const;
+
+const dashboardSection = {
+  padding: "90px 6%",
+  background: "#fff2df",
+} as const;
+
+const auditSection = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
   gap: 60,
-  alignItems: "start",
-};
+  padding: "100px 6%",
+} as const;
 
-const auditTitle: React.CSSProperties = {
+const auditTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 64,
+  fontSize: 60,
   lineHeight: 1.05,
-  margin: "10px 0",
-};
+} as const;
 
-const formStyle: React.CSSProperties = {
+const formStyle = {
   display: "grid",
   gap: 16,
-};
+} as const;
 
-const input: React.CSSProperties = {
+const input = {
   width: "100%",
   padding: 18,
   borderRadius: 14,
-  border: `1px solid ${border}`,
+  border: "1px solid #d7c4a8",
   fontSize: 16,
-  background: "white",
-};
+} as const;
 
-const textarea: React.CSSProperties = {
+const textarea = {
   width: "100%",
   padding: 18,
   borderRadius: 14,
-  border: `1px solid ${border}`,
+  border: "1px solid #d7c4a8",
   fontSize: 16,
   minHeight: 150,
-  background: "white",
-};
+} as const;
 
-const submitButton: React.CSSProperties = {
-  background: black,
+const submitBtn = {
+  background: "#111",
   color: "white",
   border: "none",
   padding: 20,
@@ -597,20 +627,22 @@ const submitButton: React.CSSProperties = {
   fontWeight: 900,
   fontSize: 18,
   cursor: "pointer",
-};
+} as const;
 
-const messageStyle: React.CSSProperties = {
+const messageStyle = {
+  color: "#b88716",
   fontWeight: 900,
-  color: gold,
-};
+  fontSize: 18,
+} as const;
 
-const footer: React.CSSProperties = {
-  background: black,
+const footer = {
+  background: "#111",
   color: "white",
-  padding: "40px 6%",
-};
+  padding: "42px 6%",
+  lineHeight: 1.8,
+} as const;
 
-const footerLink: React.CSSProperties = {
-  color: gold,
+const footerLink = {
+  color: "#c7962b",
   fontWeight: 900,
-};
+} as const;
