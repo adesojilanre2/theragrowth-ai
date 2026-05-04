@@ -4,23 +4,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      name,
-      email,
-      phone,
-      practice,
-      website,
-      budget,
-      challenge,
-    } = body;
-
-    if (!name || !email) {
-      return NextResponse.json(
-        { success: false, message: "Name and email are required." },
-        { status: 400 }
-      );
-    }
-
     const formspreeUrl = process.env.FORMSPREE_AUDIT_URL;
 
     if (!formspreeUrl) {
@@ -30,7 +13,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const formspreeResponse = await fetch(formspreeUrl, {
+    const response = await fetch(formspreeUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -38,19 +21,24 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         subject: "New TheraGrowth Free Audit Request",
-        name,
-        email,
-        phone,
-        practice,
-        website,
-        budget,
-        challenge,
+        name: body.name || "",
+        email: body.email || "",
+        phone: body.phone || "",
+        practice: body.practice || "",
+        website: body.website || "",
+        budget: body.budget || "Free Audit Only",
+        challenge: body.challenge || "",
       }),
     });
 
-    if (!formspreeResponse.ok) {
+    if (!response.ok) {
+      const errorText = await response.text();
+
       return NextResponse.json(
-        { success: false, message: "Formspree email service failed." },
+        {
+          success: false,
+          message: `Formspree failed: ${errorText}`,
+        },
         { status: 500 }
       );
     }
@@ -61,7 +49,10 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: "Server error." },
+      {
+        success: false,
+        message: "Server error.",
+      },
       { status: 500 }
     );
   }
