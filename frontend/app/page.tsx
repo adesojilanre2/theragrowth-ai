@@ -16,6 +16,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  const stripeStarter = "https://buy.stripe.com/8x28wR8eVd12beV4df2sM06";
+  const stripeGrowth = "https://buy.stripe.com/3cI6oJdzff9a1ElfVX2sM09";
+  const stripeDoneWithYou = "https://buy.stripe.com/dRmaEZ8eVf9a82JfVX2sM0a";
+
   function updateField(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
@@ -52,7 +56,7 @@ export default function HomePage() {
       } else {
         setMessage(`❌ ${data.message || "Something went wrong."}`);
       }
-    } catch {
+    } catch (error) {
       setMessage("❌ Server error.");
     } finally {
       setLoading(false);
@@ -62,49 +66,49 @@ export default function HomePage() {
   return (
     <main style={page}>
       <header style={header}>
-        <div style={brandWrap}>
+        <a href="#" style={brand}>
           <div style={logo}>TG</div>
           <div>
-            <h1 style={brand}>TheraGrowth AI</h1>
+            <strong>TheraGrowth AI</strong>
             <p style={tagline}>SaaS Growth System for Therapists</p>
           </div>
-        </div>
+        </a>
 
         <nav style={nav}>
           <a href="#services" style={navLink}>Services</a>
           <a href="#pricing" style={navLink}>SaaS Pricing</a>
           <a href="#signup" style={navLink}>Signup</a>
           <a href="#dashboard" style={navLink}>Dashboard</a>
-          <a href="#audit" style={auditNav}>Free Audit</a>
+          <a href="#audit" style={auditButton}>Free Audit</a>
         </nav>
       </header>
 
       <section style={hero}>
         <div>
           <p style={eyebrow}>AI CHAT • FOLLOW-UP • CLIENT ACQUISITION SYSTEM</p>
-          <h2 style={heroTitle}>
+          <h1 style={heroTitle}>
             Turn Your Therapy Website Into a Private-Pay Client Machine
-          </h2>
+          </h1>
           <p style={heroText}>
-            TheraGrowth AI helps therapists capture leads, follow up faster,
-            track inquiries, and convert more website visitors into booked consultations.
+            TheraGrowth AI helps therapists capture leads, follow up faster, track inquiries,
+            and convert more website visitors into booked consultations.
           </p>
           <a href="#audit" style={primaryButton}>Request Free Audit</a>
         </div>
 
         <div style={heroCard}>
           <div style={logo}>TG</div>
-          <h3 style={heroCardTitle}>
+          <h2 style={cardTitle}>
             A complete client acquisition engine for private practices.
-          </h3>
-          <ul style={heroList}>
+          </h2>
+          <ul style={list}>
             <li>Lead capture system</li>
             <li>Client inquiry tracking</li>
             <li>AI follow-up support</li>
-            <li>Monthly SaaS plans</li>
-            <li>Stripe payment links</li>
+            <li>Monthly growth plans</li>
+            <li>Stripe subscription billing</li>
           </ul>
-          <a href="#pricing" style={primaryButton}>Start Monthly SaaS</a>
+          <a href="#pricing" style={darkButton}>Start Monthly SaaS</a>
         </div>
       </section>
 
@@ -116,24 +120,24 @@ export default function HomePage() {
           <div style={card}>
             <h3>Website Conversion Audit</h3>
             <p>
-              We review the therapist website, offer, calls-to-action, speed,
-              trust signals, and booking flow.
+              We review your therapist website, offer, calls-to-action, trust signals,
+              speed, and booking flow.
             </p>
           </div>
 
           <div style={card}>
             <h3>AI Chat Lead Capture</h3>
             <p>
-              Website visitors can ask questions and submit inquiries directly
-              into the lead system.
+              Website visitors can ask questions and submit inquiries directly into your
+              lead system.
             </p>
           </div>
 
           <div style={card}>
-            <h3>Client Follow-Up System</h3>
+            <h3>Follow-Up System</h3>
             <p>
-              Track every inquiry, next action, lead status, and follow-up date
-              so no client is forgotten.
+              Track every inquiry, next action, lead status, and follow-up date so no
+              potential client is forgotten.
             </p>
           </div>
         </div>
@@ -147,44 +151,30 @@ export default function HomePage() {
           <div style={priceCard}>
             <h3>Starter</h3>
             <h2>$99/mo</h2>
-            <p>Capture and convert more private-pay client inquiries automatically.</p>
-
-            <ul style={list}>
-              <li>Lead capture system</li>
-              <li>Client inquiry tracking</li>
-              <li>Follow-up support</li>
-              <li>Practice growth audit included</li>
+            <p style={muted}>Start getting more private-pay client inquiries from your website.</p>
+            <ul style={whiteList}>
+              <li>Capture new client inquiries automatically</li>
+              <li>Track every potential client in one place</li>
+              <li>Never miss a follow-up opportunity</li>
+              <li>Includes practice growth audit</li>
             </ul>
-
-            <a
-              href="https://buy.stripe.com/8x28wR8eVd12beV4df2sM06"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={payButton}
-            >
+            <a href={stripeStarter} target="_blank" style={goldButton}>
               Start Starter Plan
             </a>
           </div>
 
-          <div style={{ ...priceCard, border: "2px solid #c7962b" }}>
-            <p style={badge}>MOST POPULAR</p>
+          <div style={featuredCard}>
+            <p style={popular}>MOST POPULAR</p>
             <h3>Growth</h3>
             <h2>$299/mo</h2>
-            <p>Scale your practice with a complete client acquisition system.</p>
-
-            <ul style={list}>
+            <p style={muted}>Turn more website visitors into booked therapy sessions.</p>
+            <ul style={whiteList}>
               <li>Everything in Starter</li>
-              <li>AI follow-up support</li>
-              <li>Lead conversion tracking</li>
-              <li>Monthly growth optimization</li>
+              <li>AI-assisted follow-up support</li>
+              <li>Convert more inquiries into paying clients</li>
+              <li>Ongoing growth optimization</li>
             </ul>
-
-            <a
-              href="https://buy.stripe.com/3cI6oJdzff9a1ElfVX2sM09"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={payButton}
-            >
+            <a href={stripeGrowth} target="_blank" style={goldButton}>
               Start Growth Plan
             </a>
           </div>
@@ -192,21 +182,14 @@ export default function HomePage() {
           <div style={priceCard}>
             <h3>Done-With-You</h3>
             <h2>$750+</h2>
-            <p>We help build and optimize your full client acquisition system.</p>
-
-            <ul style={list}>
-              <li>Website funnel optimization</li>
-              <li>Lead capture setup</li>
-              <li>Follow-up system setup</li>
-              <li>1:1 implementation support</li>
+            <p style={muted}>We help you build a complete client acquisition system.</p>
+            <ul style={whiteList}>
+              <li>Optimize your website to convert visitors</li>
+              <li>Set up your lead capture system</li>
+              <li>Install a follow-up process that books clients</li>
+              <li>1:1 support to grow your practice</li>
             </ul>
-
-            <a
-              href="https://buy.stripe.com/dRmaEZ8eVf9a82JfVX2sM0a"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={payButton}
-            >
+            <a href={stripeDoneWithYou} target="_blank" style={goldButton}>
               Get Done-With-You Setup
             </a>
           </div>
@@ -262,61 +245,60 @@ export default function HomePage() {
           <p style={eyebrow}>FREE AUDIT</p>
           <h2 style={auditTitle}>Request Your Free Practice Growth Audit</h2>
           <p style={heroText}>
-            Submit your practice details and we’ll review your website, funnel,
-            and client acquisition system.
+            Submit your practice details and we’ll review your website, funnel, and
+            client acquisition system.
           </p>
         </div>
 
         <form onSubmit={handleAuditSubmit} style={formStyle}>
           <input
+            style={input}
             name="name"
+            placeholder="Full Name"
             value={form.name}
             onChange={updateField}
-            placeholder="Full Name"
             required
-            style={input}
           />
 
           <input
+            style={input}
             name="email"
             type="email"
+            placeholder="Business Email"
             value={form.email}
             onChange={updateField}
-            placeholder="Business Email"
             required
-            style={input}
           />
 
           <input
+            style={input}
             name="phone"
+            placeholder="Phone Number"
             value={form.phone}
             onChange={updateField}
-            placeholder="Phone Number"
-            style={input}
           />
 
           <input
+            style={input}
             name="practice"
+            placeholder="Therapy Niche"
             value={form.practice}
             onChange={updateField}
-            placeholder="Therapy Niche"
-            required
-            style={input}
           />
 
           <input
+            style={input}
             name="website"
+            placeholder="Website URL"
             value={form.website}
             onChange={updateField}
-            placeholder="Website URL"
-            style={input}
           />
 
           <select
+            style={input}
             name="budget"
             value={form.budget}
             onChange={updateField}
-            style={input}
           >
             <option>Free Audit Only</option>
             <option>$99/mo Starter</option>
@@ -325,19 +307,18 @@ export default function HomePage() {
           </select>
 
           <textarea
+            style={textarea}
             name="challenge"
+            placeholder="What do you need help with?"
             value={form.challenge}
             onChange={updateField}
-            placeholder="What do you need help with?"
-            required
-            style={textarea}
           />
 
-          <button type="submit" disabled={loading} style={submitBtn}>
+          <button type="submit" style={submitButton} disabled={loading}>
             {loading ? "Submitting..." : "Submit Free Audit Request"}
           </button>
 
-          {message && <p style={messageStyle}>{message}</p>}
+          {message && <p style={statusMessage}>{message}</p>}
         </form>
       </section>
 
@@ -348,7 +329,7 @@ export default function HomePage() {
           follow-up, and growth systems.
         </p>
 
-        <p style={{ marginTop: 16 }}>
+        <p>
           <a
             href="https://instagram.com/theragrowth.ai"
             target="_blank"
@@ -373,233 +354,238 @@ export default function HomePage() {
 const page = {
   background: "#fffaf2",
   color: "#111",
-  minHeight: "100vh",
   fontFamily: "Arial, sans-serif",
-} as const;
+};
 
 const header = {
-  position: "sticky",
+  position: "sticky" as const,
   top: 0,
   zIndex: 10,
   background: "#fffaf2",
   borderBottom: "1px solid #d7c4a8",
-  padding: "28px 6%",
+  padding: "22px 6%",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  gap: 24,
-} as const;
+};
 
-const brandWrap = {
+const brand = {
   display: "flex",
   alignItems: "center",
   gap: 14,
-} as const;
+  textDecoration: "none",
+  color: "#111",
+};
 
 const logo = {
-  width: 70,
-  height: 70,
+  width: 58,
+  height: 58,
   borderRadius: "50%",
   background: "#111",
-  color: "#c7962b",
+  color: "#d4a72c",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: "Georgia, serif",
   fontSize: 28,
   fontWeight: 900,
-} as const;
-
-const brand = {
-  margin: 0,
-  fontSize: 20,
-  fontWeight: 900,
-} as const;
+};
 
 const tagline = {
   margin: 0,
-  color: "#555",
-  fontSize: 16,
-} as const;
+  color: "#444",
+};
 
 const nav = {
   display: "flex",
   gap: 26,
   alignItems: "center",
-  flexWrap: "wrap",
-} as const;
+};
 
 const navLink = {
   color: "#111",
   fontWeight: 900,
   textDecoration: "none",
-} as const;
+};
 
-const auditNav = {
+const auditButton = {
   color: "#111",
   fontWeight: 900,
   textDecoration: "none",
   border: "1px solid #d7c4a8",
-  borderRadius: 30,
   padding: "14px 24px",
-} as const;
+  borderRadius: 999,
+};
 
 const hero = {
   display: "grid",
-  gridTemplateColumns: "1.3fr .8fr",
+  gridTemplateColumns: "1.4fr 1fr",
   gap: 60,
-  padding: "100px 6%",
+  padding: "90px 6%",
   alignItems: "center",
-} as const;
+};
 
 const eyebrow = {
-  color: "#c7962b",
+  color: "#b88918",
+  letterSpacing: 6,
   fontWeight: 900,
-  letterSpacing: 5,
-  fontSize: 16,
-} as const;
+};
 
 const heroTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 76,
-  lineHeight: 1,
-  margin: "20px 0",
-} as const;
+  fontSize: 74,
+  lineHeight: 1.05,
+  margin: "14px 0",
+};
 
 const heroText = {
   fontSize: 20,
   lineHeight: 1.7,
-  color: "#23344d",
-} as const;
+  color: "#24344d",
+};
 
 const primaryButton = {
   display: "inline-block",
-  marginTop: 20,
+  marginTop: 24,
   background: "#111",
   color: "white",
   padding: "18px 28px",
   borderRadius: 14,
   textDecoration: "none",
   fontWeight: 900,
-} as const;
+};
 
 const heroCard = {
   background: "white",
   border: "1px solid #d7c4a8",
   borderRadius: 28,
   padding: 42,
-} as const;
+};
 
-const heroCardTitle = {
+const cardTitle = {
   fontFamily: "Georgia, serif",
   fontSize: 34,
-  lineHeight: 1.1,
-} as const;
+};
 
-const heroList = {
+const list = {
   lineHeight: 2,
   fontSize: 17,
-} as const;
+};
+
+const darkButton = {
+  display: "inline-block",
+  background: "#111",
+  color: "white",
+  padding: "16px 24px",
+  borderRadius: 14,
+  textDecoration: "none",
+  fontWeight: 900,
+};
 
 const section = {
-  padding: "90px 6%",
-} as const;
+  padding: "85px 6%",
+};
+
+const dashboardSection = {
+  padding: "85px 6%",
+  background: "#fff4e3",
+};
 
 const sectionTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 56,
-  lineHeight: 1.1,
-} as const;
+  fontSize: 54,
+};
 
 const grid3 = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gridTemplateColumns: "repeat(3, 1fr)",
   gap: 24,
-  marginTop: 34,
-} as const;
+};
 
 const card = {
   background: "white",
   border: "1px solid #d7c4a8",
   borderRadius: 24,
-  padding: 32,
-  fontSize: 18,
-  lineHeight: 1.6,
-} as const;
+  padding: 30,
+  fontSize: 17,
+  lineHeight: 1.7,
+};
 
 const darkSection = {
   background: "#111",
   color: "white",
-  padding: "90px 6%",
-} as const;
+  padding: "85px 6%",
+};
 
 const darkTitle = {
   fontFamily: "Georgia, serif",
-  fontSize: 56,
-  lineHeight: 1.1,
-  color: "white",
-} as const;
+  fontSize: 54,
+};
 
 const pricingGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  gridTemplateColumns: "repeat(3, 1fr)",
   gap: 24,
-  marginTop: 40,
-} as const;
+};
 
 const priceCard = {
   background: "#1b1b1b",
   border: "1px solid #333",
   borderRadius: 24,
-  padding: 32,
+  padding: 34,
+};
+
+const featuredCard = {
+  background: "#1b1b1b",
+  border: "1px solid #d4a72c",
+  borderRadius: 24,
+  padding: 34,
+};
+
+const popular = {
+  color: "#d4a72c",
+  letterSpacing: 5,
+  fontWeight: 900,
+};
+
+const muted = {
+  color: "#6f7f99",
+  lineHeight: 1.7,
+};
+
+const whiteList = {
+  lineHeight: 2,
   color: "white",
-} as const;
+};
 
-const list = {
-  lineHeight: 1.9,
-  marginTop: 18,
-  marginBottom: 28,
-} as const;
-
-const payButton = {
+const goldButton = {
   display: "inline-block",
-  background: "#c7962b",
-  color: "black",
-  padding: "14px 22px",
+  marginTop: 18,
+  background: "#d4a72c",
+  color: "#111",
+  padding: "16px 24px",
   borderRadius: 14,
-  fontWeight: 900,
   textDecoration: "none",
-} as const;
-
-const badge = {
-  color: "#c7962b",
   fontWeight: 900,
-  letterSpacing: 2,
-  marginBottom: 12,
-} as const;
-
-const dashboardSection = {
-  padding: "90px 6%",
-  background: "#fff2df",
-} as const;
+};
 
 const auditSection = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
   gap: 60,
-  padding: "100px 6%",
-} as const;
+  padding: "90px 6%",
+};
 
 const auditTitle = {
   fontFamily: "Georgia, serif",
   fontSize: 60,
-  lineHeight: 1.05,
-} as const;
+  lineHeight: 1.1,
+};
 
 const formStyle = {
   display: "grid",
   gap: 16,
-} as const;
+};
 
 const input = {
   width: "100%",
@@ -607,7 +593,8 @@ const input = {
   borderRadius: 14,
   border: "1px solid #d7c4a8",
   fontSize: 16,
-} as const;
+  background: "white",
+};
 
 const textarea = {
   width: "100%",
@@ -616,33 +603,34 @@ const textarea = {
   border: "1px solid #d7c4a8",
   fontSize: 16,
   minHeight: 150,
-} as const;
+  background: "white",
+};
 
-const submitBtn = {
+const submitButton = {
   background: "#111",
   color: "white",
   border: "none",
-  padding: 20,
+  padding: 18,
   borderRadius: 14,
   fontWeight: 900,
   fontSize: 18,
   cursor: "pointer",
-} as const;
+};
 
-const messageStyle = {
-  color: "#b88716",
+const statusMessage = {
+  color: "#b88918",
   fontWeight: 900,
   fontSize: 18,
-} as const;
+};
 
 const footer = {
   background: "#111",
   color: "white",
-  padding: "42px 6%",
+  padding: "45px 6%",
   lineHeight: 1.8,
-} as const;
+};
 
 const footerLink = {
-  color: "#c7962b",
+  color: "#d4a72c",
   fontWeight: 900,
-} as const;
+};
