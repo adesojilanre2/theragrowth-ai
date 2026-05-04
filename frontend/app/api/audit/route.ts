@@ -1,58 +1,56 @@
-import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const formspreeUrl = process.env.FORMSPREE_AUDIT_URL;
-
-    if (!formspreeUrl) {
-      return NextResponse.json(
-        { success: false, message: "Formspree endpoint is not configured." },
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(formspreeUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
-      body: JSON.stringify({
-        subject: "New TheraGrowth Free Audit Request",
-        name: body.name || "",
-        email: body.email || "",
-        phone: body.phone || "",
-        practice: body.practice || "",
-        website: body.website || "",
-        budget: body.budget || "Free Audit Only",
-        challenge: body.challenge || "",
-      }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Formspree failed: ${errorText}`,
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Audit request submitted successfully.",
+    // 📩 EMAIL TO YOU
+    await transporter.sendMail({
+      from: `"TheraGrowth AI" <${process.env.SMTP_USER}>`,
+      to: process.env.LEAD_NOTIFY_EMAIL,
+      subject: "🔥 New Lead - TheraGrowth",
+      html: `
+        <h2>New Lead</h2>
+        <p><b>Name:</b> ${body.name}</p>
+        <p><b>Email:</b> ${body.email}</p>
+        <p><b>Phone:</b> ${body.phone}</p>
+        <p><b>Practice:</b> ${body.practice}</p>
+        <p><b>Website:</b> ${body.website}</p>
+        <p><b>Budget:</b> ${body.budget}</p>
+        <p><b>Challenge:</b> ${body.challenge}</p>
+      `,
     });
+
+    // 📩 AUTO RESPONSE TO CLIENT
+    await transporter.sendMail({
+      from: `"TheraGrowth AI" <${process.env.SMTP_USER}>`,
+      to: body.email,
+      subject: "We received your request",
+      html: `
+        <h2>You're in 🚀</h2>
+        <p>Hi ${body.name},</p>
+        <p>We received your audit request.</p>
+        <p>Our team will contact you shortly.</p>
+        <br/>
+        <p><b>TheraGrowth AI</b></p>
+      `,
+    });
+
+    return Response.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Server error.",
-      },
+    console.error("EMAIL ERROR:", error);
+    return Response.json(
+      { success: false, message: "Email failed" },
       { status: 500 }
     );
   }
