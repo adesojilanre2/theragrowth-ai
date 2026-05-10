@@ -1,9 +1,8 @@
 import "./globals.css";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "TheraGrowth AI",
-  description: "AI growth assistant for therapists and private practices",
+  description: "Client acquisition system for therapists",
 };
 
 export default function RootLayout({
@@ -13,14 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
-
-        <script
-          src="//code.tidio.co/7fqkkcirnsv6d9lpc9dh8qiyfwpuu8f5.js"
-          async
-        ></script>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
