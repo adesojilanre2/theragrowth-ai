@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ChatWidget from "@/components/ChatWidget";
+import ChatWidget from "../components/ChatWidget";
 
 const services = [
   {
