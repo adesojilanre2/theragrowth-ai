@@ -1,4 +1,5 @@
 "use client";
+import ChatWidget from "../components/ChatWidget";
 
 import React, { useState } from "react";
 
