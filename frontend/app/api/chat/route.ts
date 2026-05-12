@@ -1,33 +1,69 @@
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const message = body.message || "";
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 
-  const lower = message.toLowerCase();
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const messages: ChatMessage[] = body.messages || [];
 
-  let reply =
-    "TheraGrowth AI helps therapists capture more private-pay inquiries, improve website conversion, follow up faster, and book more consultations. You can start by requesting a free practice growth audit.";
+    const lastUserMessage =
+      messages
+        .filter((message) => message.role === "user")
+        .pop()
+        ?.content?.toLowerCase() || "";
 
-  if (lower.includes("price") || lower.includes("cost")) {
-    reply =
-      "Our starter plan is $99/month, growth plan is $299/month, and done-with-you setup starts at $750. The best first step is a free audit.";
+    let reply =
+      "Thanks for reaching out. TheraGrowth AI helps therapists improve website conversion, capture leads, organize inquiries, and follow up faster so more potential clients book consultations.";
+
+    if (
+      lastUserMessage.includes("price") ||
+      lastUserMessage.includes("pricing") ||
+      lastUserMessage.includes("cost")
+    ) {
+      reply =
+        "Our services are designed around therapist growth needs. You can start with a free audit, then choose a setup or monthly growth support package. Visit the Pricing page or request a free audit so we can recommend the right option.";
+    } else if (
+      lastUserMessage.includes("audit") ||
+      lastUserMessage.includes("website")
+    ) {
+      reply =
+        "For the free audit, we review your website, messaging, lead capture, booking flow, and follow-up process. Share your website URL and the main problem you want to fix.";
+    } else if (
+      lastUserMessage.includes("lead") ||
+      lastUserMessage.includes("client") ||
+      lastUserMessage.includes("private pay") ||
+      lastUserMessage.includes("private-pay")
+    ) {
+      reply =
+        "TheraGrowth AI helps therapists get more private-pay client inquiries by improving positioning, website calls-to-action, AI chat, inquiry capture, and follow-up speed.";
+    } else if (
+      lastUserMessage.includes("therapy") ||
+      lastUserMessage.includes("therapist") ||
+      lastUserMessage.includes("practice")
+    ) {
+      reply =
+        "We help therapy practices turn their website into a client acquisition system. The goal is to capture inquiries, answer common questions, and move potential clients toward booking.";
+    } else if (
+      lastUserMessage.includes("hello") ||
+      lastUserMessage.includes("hi") ||
+      lastUserMessage.includes("hey")
+    ) {
+      reply =
+        "Hi, welcome to TheraGrowth AI. Are you looking for help with your therapy website, private-pay clients, AI chat, or follow-up system?";
+    }
+
+    return NextResponse.json({ reply });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        reply:
+          "Sorry, something went wrong. Please try again or email hello@theragrowth-ai.com.",
+      },
+      { status: 500 }
+    );
   }
-
-  if (lower.includes("audit")) {
-    reply =
-      "The free audit reviews your website, offer, calls-to-action, trust signals, booking flow, and follow-up system to identify where client inquiries are being lost.";
-  }
-
-  if (lower.includes("client") || lower.includes("private pay")) {
-    reply =
-      "We help therapists get more private-pay clients by improving their website conversion, lead capture, AI chat, follow-up process, and local visibility.";
-  }
-
-  if (lower.includes("book") || lower.includes("call")) {
-    reply =
-      "Great. Submit the free audit form with your practice website, and we’ll review where leads are being lost before booking a growth call.";
-  }
-
-  return NextResponse.json({ reply });
 }

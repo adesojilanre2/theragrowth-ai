@@ -2,47 +2,63 @@
 
 import { useState } from "react";
 
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      text: "Hi 👋 I’m TheraGrowth AI. Want help getting more private-pay clients?",
+      content:
+        "Hi, I’m the TheraGrowth AI assistant. I can help with private-pay client growth, website audits, AI chat, and lead follow-up systems. What do you need help with?",
     },
   ]);
-  const [loading, setLoading] = useState(false);
 
   async function sendMessage() {
-    if (!input.trim()) return;
+    const text = input.trim();
+    if (!text || loading) return;
 
-    const userMessage = input;
+    const userMessage: Message = { role: "user", content: text };
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+        }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      setMessages((prev) => [
-        ...prev,
+      setMessages((current) => [
+        ...current,
         {
           role: "assistant",
-          text: data.reply || "Thanks. Please request a free audit and we’ll review your practice.",
+          content:
+            data.reply ||
+            "Thanks. Please share your website and what you want to improve, and we can help you with the next step.",
         },
       ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
+    } catch (error) {
+      setMessages((current) => [
+        ...current,
         {
           role: "assistant",
-          text: "Sorry, the chat had an issue. Please submit the free audit form.",
+          content:
+            "Sorry, the chat had a connection issue. Please try again or email hello@theragrowth-ai.com.",
         },
       ]);
     } finally {
@@ -51,40 +67,73 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="chat-widget">
+    <>
       {open && (
-        <div className="chat-box">
-          <div className="chat-header">
-            <strong>TheraGrowth AI</strong>
-            <button onClick={() => setOpen(false)}>×</button>
+        <div className="fixed bottom-24 right-6 z-50 w-[92vw] max-w-md overflow-hidden rounded-3xl border border-[#e0caa8] bg-white shadow-2xl">
+          <div className="flex items-center justify-between bg-[#111111] px-5 py-4 text-white">
+            <div>
+              <h3 className="font-black">TheraGrowth AI Chat</h3>
+              <p className="text-sm text-[#c9d4e5]">Growth assistant</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-full bg-white/10 px-3 py-1 text-xl font-black"
+            >
+              ×
+            </button>
           </div>
 
-          <div className="chat-messages">
-            {messages.map((msg, index) => (
-              <div key={index} className={`chat-message ${msg.role}`}>
-                {msg.text}
+          <div className="h-96 space-y-4 overflow-y-auto bg-[#f7f0e6] p-4">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`rounded-2xl p-4 text-sm leading-6 ${
+                  message.role === "user"
+                    ? "ml-auto max-w-[85%] bg-[#111111] text-white"
+                    : "mr-auto max-w-[85%] bg-white text-[#111111]"
+                }`}
+              >
+                {message.content}
               </div>
             ))}
-            {loading && <div className="chat-message assistant">Typing...</div>}
+
+            {loading && (
+              <div className="mr-auto max-w-[85%] rounded-2xl bg-white p-4 text-sm">
+                Typing...
+              </div>
+            )}
           </div>
 
-          <div className="chat-input">
+          <div className="flex gap-2 border-t border-[#eadcc6] bg-white p-3">
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about growing your practice..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") sendMessage();
               }}
+              placeholder="Ask about growing your practice..."
+              className="flex-1 rounded-full border border-[#d8c3a5] px-4 py-3 text-sm outline-none"
             />
-            <button onClick={sendMessage}>Send</button>
+            <button
+              type="button"
+              onClick={sendMessage}
+              disabled={loading}
+              className="rounded-full bg-[#111111] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
+            >
+              Send
+            </button>
           </div>
         </div>
       )}
 
-      <button className="chat-button" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-full bg-[#111111] px-6 py-4 font-black text-white shadow-2xl"
+      >
         💬 Chat with us
       </button>
-    </div>
+    </>
   );
 }
