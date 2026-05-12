@@ -20,7 +20,10 @@ const supabase = createClient(
 );
 
 function extractEmail(text: string) {
-  return text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() || "";
+  return (
+    text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() ||
+    ""
+  );
 }
 
 function extractWebsite(text: string) {
@@ -30,7 +33,13 @@ function extractWebsite(text: string) {
     "";
 
   if (!match) return "";
-  const cleaned = match.replace(/^https?:\/\//i, "").replace(/^www\./i, "");
+
+  const cleaned = match
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/[),.]+$/g, "")
+    .toLowerCase();
+
   return `https://${cleaned}`;
 }
 
@@ -54,40 +63,49 @@ function mergeLead(lead: Lead, userText: string, messages: ChatMessage[]): Lead 
   if (email) updated.email = email;
   if (website) updated.website = website;
 
-  if (
-    !updated.name &&
-    !email &&
-    !website &&
-    text.split(/\s+/).length <= 4
-  ) {
+  if (!updated.name && !email && !website && text.split(/\s+/).length <= 4) {
     updated.name = text;
   }
 
   if (
     question.includes("main challenge") ||
     question.includes("want to fix") ||
-    text.toLowerCase().includes("lead") ||
-    text.toLowerCase().includes("client") ||
-    text.toLowerCase().includes("booking") ||
-    text.toLowerCase().includes("follow")
+    question.includes("private-pay") ||
+    question.includes("booked consultations")
   ) {
     if (!email && !website) updated.main_challenge = text;
   }
 
   if (
     question.includes("type of therapy practice") ||
-    question.includes("practice is this") ||
-    text.toLowerCase().includes("trauma") ||
-    text.toLowerCase().includes("anxiety") ||
-    text.toLowerCase().includes("couples") ||
-    text.toLowerCase().includes("family")
+    question.includes("practice is this")
   ) {
-    if (!email && !website && updated.main_challenge) {
-      updated.practice_type = text;
-    }
+    if (!email && !website) updated.practice_type = text;
   }
 
   return updated;
+}
+
+async function getExistingLead(email: string) {
+  if (!email) return null;
+
+  const { data } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
+
+  return data;
+}
+
+function combineLead(existing: any, current: Lead): Lead {
+  return {
+    name: current.name || existing?.name || "",
+    email: current.email || existing?.email || "",
+    website: current.website || existing?.website || "",
+    main_challenge: current.main_challenge || existing?.main_challenge || "",
+    practice_type: current.practice_type || existing?.practice_type || "",
+  };
 }
 
 function nextReply(lead: Lead) {
@@ -107,11 +125,7 @@ function nextReply(lead: Lead) {
 async function saveLead(lead: Lead, lastMessage: string) {
   if (!lead.email) return;
 
-  const { data: existing } = await supabase
-    .from("leads")
-    .select("id")
-    .eq("email", lead.email)
-    .maybeSingle();
+  const existing = await getExistingLead(lead.email);
 
   const payload = {
     name: lead.name || null,
@@ -137,27 +151,32 @@ async function saveLead(lead: Lead, lastMessage: string) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
     const messages: ChatMessage[] = body.messages || [];
     const lead: Lead = body.lead || {};
 
     const lastUserMessage =
       messages.filter((m) => m.role === "user").pop()?.content || "";
 
-    const updatedLead = mergeLead(lead, lastUserMessage, messages);
+    const extractedLead = mergeLead(lead, lastUserMessage, messages);
 
-    if (updatedLead.email) {
-      await saveLead(updatedLead, lastUserMessage);
+    const existing = extractedLead.email
+      ? await getExistingLead(extractedLead.email)
+      : null;
+
+    const finalLead = combineLead(existing, extractedLead);
+
+    if (finalLead.email) {
+      await saveLead(finalLead, lastUserMessage);
     }
 
     return NextResponse.json({
-      reply: nextReply(updatedLead),
-      lead: updatedLead,
+      reply: nextReply(finalLead),
+      lead: finalLead,
     });
   } catch {
     return NextResponse.json(
-      {
-        reply: "Sorry, something went wrong. Please try again.",
-      },
+      { reply: "Sorry, something went wrong. Please try again." },
       { status: 500 }
     );
   }
