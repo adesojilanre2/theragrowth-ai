@@ -1,183 +1,73 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 type ChatMessage = {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 };
 
-type Lead = {
-  name?: string;
-  email?: string;
-  website?: string;
-  main_challenge?: string;
-  practice_type?: string;
-};
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-function extractEmail(text: string) {
-  return (
-    text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() ||
-    ""
-  );
-}
-
-function extractWebsite(text: string) {
-  const match =
-    text.match(/https?:\/\/[^\s,]+/i)?.[0] ||
-    text.match(/\b(?![\w.-]*@)([a-z0-9-]+\.(com|org|net|co|ai|io|care|health|clinic))\b/i)?.[0] ||
-    "";
-
-  if (!match) return "";
-
-  const cleaned = match
-    .replace(/^https?:\/\//i, "")
-    .replace(/^www\./i, "")
-    .replace(/[),.]+$/g, "")
-    .toLowerCase();
-
-  return `https://${cleaned}`;
-}
-
-function lastAssistantQuestion(messages: ChatMessage[]) {
-  return (
-    [...messages]
-      .reverse()
-      .find((m) => m.role === "assistant")
-      ?.content.toLowerCase() || ""
-  );
-}
-
-function mergeLead(lead: Lead, userText: string, messages: ChatMessage[]): Lead {
-  const updated: Lead = { ...lead };
-  const text = userText.trim();
-  const question = lastAssistantQuestion(messages);
-
-  const email = extractEmail(text);
-  const website = extractWebsite(text);
-
-  if (email) updated.email = email;
-  if (website) updated.website = website;
-
-  if (!updated.name && !email && !website && text.split(/\s+/).length <= 4) {
-    updated.name = text;
-  }
-
-  if (
-    question.includes("main challenge") ||
-    question.includes("want to fix") ||
-    question.includes("private-pay") ||
-    question.includes("booked consultations")
-  ) {
-    if (!email && !website) updated.main_challenge = text;
-  }
-
-  if (
-    question.includes("type of therapy practice") ||
-    question.includes("practice is this")
-  ) {
-    if (!email && !website) updated.practice_type = text;
-  }
-
-  return updated;
-}
-
-async function getExistingLead(email: string) {
-  if (!email) return null;
-
-  const { data } = await supabase
-    .from("leads")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-
-  return data;
-}
-
-function combineLead(existing: any, current: Lead): Lead {
-  return {
-    name: current.name || existing?.name || "",
-    email: current.email || existing?.email || "",
-    website: current.website || existing?.website || "",
-    main_challenge: current.main_challenge || existing?.main_challenge || "",
-    practice_type: current.practice_type || existing?.practice_type || "",
-  };
-}
-
-function nextReply(lead: Lead) {
-  if (!lead.name) return "Thanks. What is your name?";
-  if (!lead.email) return "Great. What email should we use for your free audit?";
-  if (!lead.website) return "Thanks. What is your therapy practice website?";
-  if (!lead.main_challenge) {
-    return "Thanks. What is the main challenge you want to fix right now: more private-pay clients, better website conversion, faster follow-up, or more booked consultations?";
-  }
-  if (!lead.practice_type) {
-    return "Optional final question: what type of therapy practice is this? For example: anxiety, trauma, couples, family, child therapy, or general private practice.";
-  }
-
-  return "Perfect. I captured your information. TheraGrowth AI will use this to prepare your free audit.";
-}
-
-async function saveLead(lead: Lead, lastMessage: string) {
-  if (!lead.email) return;
-
-  const existing = await getExistingLead(lead.email);
-
-  const payload = {
-    name: lead.name || null,
-    email: lead.email,
-    website: lead.website || null,
-    main_challenge: lead.main_challenge || null,
-    practice_type: lead.practice_type || null,
-    status: "New",
-    priority: "Warm",
-    source: "chat_widget",
-    last_message: lastMessage,
-    updated_at: new Date().toISOString(),
-    notes: "Captured or updated by TheraGrowth AI chatbot.",
-  };
-
-  if (existing?.id) {
-    await supabase.from("leads").update(payload).eq("id", existing.id);
-  } else {
-    await supabase.from("leads").insert(payload);
-  }
-}
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-
+    const body = await req.json();
     const messages: ChatMessage[] = body.messages || [];
-    const lead: Lead = body.lead || {};
 
-    const lastUserMessage =
-      messages.filter((m) => m.role === "user").pop()?.content || "";
+    const apiKey = process.env.OPENAI_API_KEY;
 
-    const extractedLead = mergeLead(lead, lastUserMessage, messages);
-
-    const existing = extractedLead.email
-      ? await getExistingLead(extractedLead.email)
-      : null;
-
-    const finalLead = combineLead(existing, extractedLead);
-
-    if (finalLead.email) {
-      await saveLead(finalLead, lastUserMessage);
+    if (!apiKey) {
+      return NextResponse.json({
+        reply:
+          "I can help you review your therapy website, improve your call-to-action, capture more inquiries, and set up follow-up. The best next step is to request a free practice growth audit so we can see where your leads are being lost.",
+      });
     }
 
-    return NextResponse.json({
-      reply: nextReply(finalLead),
-      lead: finalLead,
+    const systemPrompt = `
+You are TheraGrowth AI, a helpful website assistant for a SaaS business that helps therapists get more private-pay clients.
+
+Your job:
+- Explain how TheraGrowth helps therapists improve website conversion, SEO, lead capture, follow-up, and booked consultations.
+- Encourage the visitor to request a free practice growth audit.
+- Ask for their website, niche, location, and main challenge when relevant.
+- Do not provide therapy, diagnosis, crisis counseling, or clinical advice.
+- Keep responses short, warm, and business-focused.
+- If someone appears to need mental health support, tell them to contact a licensed professional or emergency services.
+`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages.slice(-10),
+        ],
+        temperature: 0.5,
+        max_tokens: 300,
+      }),
     });
+
+    if (!response.ok) {
+      return NextResponse.json({
+        reply:
+          "Thanks for reaching out. I can help you identify where your website may be losing potential clients. Please request a free audit and include your website URL.",
+      });
+    }
+
+    const data = await response.json();
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      "I can help with that. Please request a free practice growth audit and include your website URL.";
+
+    return NextResponse.json({ reply });
   } catch {
     return NextResponse.json(
-      { reply: "Sorry, something went wrong. Please try again." },
-      { status: 500 }
+      {
+        reply:
+          "Something went wrong, but I can still help. Please request a free audit and include your website URL.",
+      },
+      { status: 200 }
     );
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -12,31 +12,22 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [lead, setLead] = useState({
-    name: "",
-    email: "",
-    website: "",
-    phone: "",
-    practice_type: "",
-    main_challenge: "",
-  });
-
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "Hi, I’m the TheraGrowth AI assistant. I can help you get more private-pay therapy clients. What is your name?",
+        "Hi 👋 I’m TheraGrowth AI. I help therapists find where their website is losing leads and how to turn more visitors into booked consultations. What do you need help with?",
     },
   ]);
 
-  async function sendMessage(customText?: string) {
-    const text = (customText || input).trim();
+  async function sendMessage(e?: React.FormEvent<HTMLFormElement>) {
+    e?.preventDefault();
+
+    const text = input.trim();
     if (!text || loading) return;
 
-    const userMessage: Message = { role: "user", content: text };
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
+    const nextMessages: Message[] = [...messages, { role: "user", content: text }];
+    setMessages(nextMessages);
     setInput("");
     setLoading(true);
 
@@ -47,33 +38,28 @@ export default function ChatWidget() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: updatedMessages,
-          lead,
+          messages: nextMessages,
         }),
       });
 
       const data = await response.json();
 
-      if (data.lead) {
-        setLead(data.lead);
-      }
-
-      setMessages((current) => [
-        ...current,
+      setMessages([
+        ...nextMessages,
         {
           role: "assistant",
           content:
             data.reply ||
-            "Thanks. Please share your website, email, and main challenge so we can prepare your audit.",
+            "Thanks — I can help with that. The best next step is to request a free practice growth audit.",
         },
       ]);
     } catch {
-      setMessages((current) => [
-        ...current,
+      setMessages([
+        ...nextMessages,
         {
           role: "assistant",
           content:
-            "Sorry, the chat had a connection issue. Please try again or email hello@theragrowth-ai.com.",
+            "Sorry, I had trouble responding. Please request a free audit and we’ll review your website manually.",
         },
       ]);
     } finally {
@@ -84,88 +70,145 @@ export default function ChatWidget() {
   return (
     <>
       {open && (
-        <div className="fixed bottom-20 right-6 z-50 w-[92vw] max-w-sm overflow-hidden rounded-3xl border border-[#e0caa8] bg-white shadow-2xl">
-          <div className="flex items-center justify-between bg-[#111111] px-5 py-4 text-white">
+        <div style={styles.chatBox}>
+          <div style={styles.header}>
             <div>
-              <h3 className="font-black">TheraGrowth AI Chat</h3>
-              <p className="text-sm text-[#c9d4e5]">Lead growth assistant</p>
+              <strong>TheraGrowth AI</strong>
+              <p style={styles.subText}>Practice growth assistant</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-full bg-white/10 px-3 py-1 text-xl font-black"
-            >
+            <button onClick={() => setOpen(false)} style={styles.closeButton}>
               ×
             </button>
           </div>
 
-          <div className="h-[420px] space-y-4 overflow-y-auto bg-[#f7f0e6] p-4">
-            {messages.map((message, index) => (
+          <div style={styles.messages}>
+            {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`rounded-2xl p-4 text-sm leading-6 ${
-                  message.role === "user"
-                    ? "ml-auto max-w-[85%] bg-[#111111] text-white"
-                    : "mr-auto max-w-[85%] bg-white text-[#111111]"
-                }`}
+                style={msg.role === "user" ? styles.userBubble : styles.assistantBubble}
               >
-                {message.content}
+                {msg.content}
               </div>
             ))}
 
-            {loading && (
-              <div className="mr-auto max-w-[85%] rounded-2xl bg-white p-4 text-sm">
-                Typing...
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              {["Free website audit", "Need more clients", "Pricing", "AI follow-up"].map(
-                (item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => sendMessage(item)}
-                    className="rounded-full border border-[#d8c3a5] bg-white px-3 py-2 text-xs font-bold"
-                  >
-                    {item}
-                  </button>
-                )
-              )}
-            </div>
+            {loading && <div style={styles.assistantBubble}>Typing...</div>}
           </div>
 
-          <div className="flex gap-2 border-t border-[#eadcc6] bg-white p-3">
+          <form onSubmit={sendMessage} style={styles.form}>
             <input
               value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") sendMessage();
-              }}
-              placeholder="Type your answer..."
-              className="flex-1 rounded-full border border-[#d8c3a5] px-4 py-3 text-sm outline-none"
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about getting more clients..."
+              style={styles.input}
             />
-            <button
-              type="button"
-              onClick={() => sendMessage()}
-              disabled={loading}
-              className="rounded-full bg-[#111111] px-5 py-3 text-sm font-black text-white disabled:opacity-60"
-            >
+            <button type="submit" style={styles.sendButton}>
               Send
             </button>
-          </div>
+          </form>
         </div>
       )}
 
-      {!open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-full bg-[#111111] px-6 py-4 font-black text-white shadow-2xl"
-        >
-          💬 Chat with us
-        </button>
-      )}
+      <button type="button" onClick={() => setOpen(true)} style={styles.launchButton}>
+        💬 Chat with us
+      </button>
     </>
   );
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  launchButton: {
+    position: "fixed",
+    right: 28,
+    bottom: 28,
+    zIndex: 100,
+    background: "#111111",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 999,
+    padding: "16px 22px",
+    fontWeight: 900,
+    cursor: "pointer",
+    boxShadow: "0 12px 35px rgba(0,0,0,0.25)",
+  },
+  chatBox: {
+    position: "fixed",
+    right: 28,
+    bottom: 90,
+    width: 380,
+    maxWidth: "calc(100vw - 40px)",
+    height: 520,
+    zIndex: 101,
+    background: "#ffffff",
+    border: "1px solid #decba8",
+    borderRadius: 24,
+    boxShadow: "0 24px 70px rgba(0,0,0,0.25)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  header: {
+    padding: 18,
+    background: "#111111",
+    color: "#ffffff",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  subText: {
+    margin: 0,
+    fontSize: 13,
+    color: "#d6a72c",
+  },
+  closeButton: {
+    background: "transparent",
+    color: "#ffffff",
+    border: "none",
+    fontSize: 28,
+    cursor: "pointer",
+  },
+  messages: {
+    flex: 1,
+    padding: 18,
+    overflowY: "auto",
+    background: "#fbf5e9",
+  },
+  assistantBubble: {
+    background: "#ffffff",
+    color: "#111111",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 12,
+    lineHeight: 1.5,
+  },
+  userBubble: {
+    background: "#111111",
+    color: "#ffffff",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 12,
+    marginLeft: 35,
+    lineHeight: 1.5,
+  },
+  form: {
+    display: "flex",
+    gap: 8,
+    padding: 14,
+    borderTop: "1px solid #decba8",
+    background: "#ffffff",
+  },
+  input: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #decba8",
+  },
+  sendButton: {
+    background: "#111111",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 12,
+    padding: "0 16px",
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+};
