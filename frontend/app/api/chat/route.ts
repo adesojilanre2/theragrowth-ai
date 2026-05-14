@@ -76,14 +76,13 @@ Rules:
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+  const errorText = await response.text();
 
-      return NextResponse.json({
-        reply:
-          "I’m connected, but the AI response failed. Please check your OpenAI API key in Vercel, then redeploy. For now, send your website URL and I can still guide you through the free audit.",
-        debug: errorText,
-      });
-    }
+  return NextResponse.json({
+    reply:
+      "OpenAI API error: " + errorText,
+  });
+}
 
     const data = await response.json();
 
