@@ -210,7 +210,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="dashboard" style={styles.dashboard}>
+      <section id="mini-dashboard" style={styles.dashboard}>
         <h2 style={styles.h2}>TheraGrowth Client Acquisition Dashboard</h2>
 
         <div style={styles.grid3}>
