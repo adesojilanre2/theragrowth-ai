@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type Lead = {
   id: string;
-  name: string | null;
-  email: string | null;
-  website: string | null;
-  phone: string | null;
-  practice_type: string | null;
-  main_challenge: string | null;
-  status: string | null;
-  priority: string | null;
   created_at: string;
+  name: string;
+  email: string;
+  phone: string;
+  practice: string;
+  website: string;
+  budget: string;
+  challenge: string;
+  source: string;
+  status: string;
+  priority: string;
+  follow_up_date: string | null;
+  notes: string | null;
 };
 
 export default function DashboardPage() {
@@ -21,139 +25,374 @@ export default function DashboardPage() {
 
   async function loadLeads() {
     setLoading(true);
+    const res = await fetch("/api/leads", { cache: "no-store" });
+    const data = await res.json();
+    setLeads(data.leads || []);
+    setLoading(false);
+  }
 
-    try {
-      const response = await fetch("/api/leads");
-      const data = await response.json();
-      setLeads(data.leads || []);
-    } catch {
-      setLeads([]);
-    } finally {
-      setLoading(false);
-    }
+  async function updateLead(id: string, updates: Partial<Lead>) {
+    const current = leads.find((lead) => lead.id === id);
+    if (!current) return;
+
+    const updatedLead = { ...current, ...updates };
+
+    setLeads((prev) =>
+      prev.map((lead) => (lead.id === id ? updatedLead : lead))
+    );
+
+    await fetch("/api/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedLead),
+    });
   }
 
   useEffect(() => {
     loadLeads();
   }, []);
 
-  return (
-    <main className="min-h-screen bg-[#f7f0e6] px-6 py-10 text-[#111111] md:px-[6%]">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-          <div>
-            <h1 className="text-5xl font-black">TheraGrowth Dashboard</h1>
-            <p className="mt-3 text-lg text-[#5f5a52]">
-              Chatbot leads, website audit requests, and therapist growth pipeline.
-            </p>
-          </div>
+  const newLeads = leads.filter((lead) => lead.status === "New").length;
+  const followUps = leads.filter((lead) => lead.follow_up_date).length;
+  const booked = leads.filter((lead) => lead.status === "Booked").length;
 
-          <button
-            onClick={loadLeads}
-            className="rounded-full bg-[#111111] px-6 py-4 font-black text-white"
-          >
-            Refresh Leads
+  return (
+    <main style={styles.page}>
+      <section style={styles.header}>
+        <div>
+          <p style={styles.label}>TheraGrowth OS</p>
+          <h1 style={styles.title}>Client Acquisition Dashboard</h1>
+          <p style={styles.subtitle}>
+            Track free audit requests, website leads, follow-ups, and booked calls.
+          </p>
+        </div>
+
+        <a href="/" style={styles.homeButton}>Back to Website</a>
+      </section>
+
+      <section style={styles.statsGrid}>
+        <StatCard title="New Leads" value={newLeads} />
+        <StatCard title="Follow-Ups Due" value={followUps} />
+        <StatCard title="Booked Calls" value={booked} />
+        <StatCard title="Total Leads" value={leads.length} />
+      </section>
+
+      <section style={styles.panel}>
+        <div style={styles.panelHeader}>
+          <h2 style={styles.sectionTitle}>Lead CRM</h2>
+          <button onClick={loadLeads} style={styles.refreshButton}>
+            Refresh
           </button>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-4">
-          <StatCard title="Total Leads" value={leads.length} />
-          <StatCard
-            title="New"
-            value={leads.filter((lead) => lead.status === "New").length}
-          />
-          <StatCard
-            title="Warm"
-            value={leads.filter((lead) => lead.priority === "Warm").length}
-          />
-          <StatCard
-            title="Websites Captured"
-            value={leads.filter((lead) => lead.website).length}
-          />
-        </div>
+        {loading ? (
+          <p>Loading leads...</p>
+        ) : leads.length === 0 ? (
+          <p>No leads yet. Submit a test free audit form from the homepage.</p>
+        ) : (
+          <div style={styles.leadList}>
+            {leads.map((lead) => (
+              <div key={lead.id} style={styles.leadCard}>
+                <div style={styles.leadTop}>
+                  <div>
+                    <h3 style={styles.leadName}>
+                      {lead.name || "Unnamed Lead"}
+                    </h3>
+                    <p style={styles.smallText}>
+                      {lead.email || "No email"} · {lead.phone || "No phone"}
+                    </p>
+                    <p style={styles.smallText}>
+                      {new Date(lead.created_at).toLocaleString()}
+                    </p>
+                  </div>
 
-        <div className="mt-10 overflow-hidden rounded-[2rem] border border-[#e0caa8] bg-white shadow-xl">
-          <div className="border-b border-[#eadcc6] p-6">
-            <h2 className="text-3xl font-black">Lead Pipeline</h2>
+                  <div style={styles.badges}>
+                    <span style={styles.badge}>{lead.status}</span>
+                    <span style={styles.badgeGold}>{lead.priority}</span>
+                  </div>
+                </div>
+
+                <div style={styles.detailsGrid}>
+                  <Info label="Practice/Niche" value={lead.practice} />
+                  <Info label="Website" value={lead.website} />
+                  <Info label="Budget" value={lead.budget} />
+                  <Info label="Source" value={lead.source} />
+                </div>
+
+                <div>
+                  <p style={styles.infoLabel}>Challenge</p>
+                  <p style={styles.challenge}>
+                    {lead.challenge || "No challenge submitted."}
+                  </p>
+                </div>
+
+                <div style={styles.controlsGrid}>
+                  <label style={styles.fieldLabel}>
+                    Status
+                    <select
+                      value={lead.status || "New"}
+                      onChange={(e) =>
+                        updateLead(lead.id, { status: e.target.value })
+                      }
+                      style={styles.input}
+                    >
+                      <option>New</option>
+                      <option>Contacted</option>
+                      <option>Booked</option>
+                      <option>Not Fit</option>
+                    </select>
+                  </label>
+
+                  <label style={styles.fieldLabel}>
+                    Priority
+                    <select
+                      value={lead.priority || "Warm"}
+                      onChange={(e) =>
+                        updateLead(lead.id, { priority: e.target.value })
+                      }
+                      style={styles.input}
+                    >
+                      <option>Hot</option>
+                      <option>Warm</option>
+                      <option>Cold</option>
+                    </select>
+                  </label>
+
+                  <label style={styles.fieldLabel}>
+                    Follow-Up Date
+                    <input
+                      type="date"
+                      value={lead.follow_up_date || ""}
+                      onChange={(e) =>
+                        updateLead(lead.id, { follow_up_date: e.target.value })
+                      }
+                      style={styles.input}
+                    />
+                  </label>
+                </div>
+
+                <label style={styles.fieldLabel}>
+                  Notes
+                  <textarea
+                    value={lead.notes || ""}
+                    onChange={(e) =>
+                      updateLead(lead.id, { notes: e.target.value })
+                    }
+                    placeholder="Add call notes, next steps, objections, or follow-up plan..."
+                    style={styles.textarea}
+                  />
+                </label>
+              </div>
+            ))}
           </div>
-
-          {loading ? (
-            <p className="p-6">Loading leads...</p>
-          ) : leads.length === 0 ? (
-            <p className="p-6">
-              No leads yet. Test your chatbot on the homepage and submit your email
-              and website.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px] text-left">
-                <thead className="bg-[#111111] text-white">
-                  <tr>
-                    <th className="p-4">Name</th>
-                    <th className="p-4">Email</th>
-                    <th className="p-4">Website</th>
-                    <th className="p-4">Challenge</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4">Priority</th>
-                    <th className="p-4">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leads.map((lead) => (
-                    <tr key={lead.id} className="border-b border-[#eadcc6]">
-                      <td className="p-4 font-bold">{lead.name || "Unknown"}</td>
-                      <td className="p-4">{lead.email || "-"}</td>
-                      <td className="p-4">
-                        {lead.website ? (
-                          <a
-                            href={
-                              lead.website.startsWith("http")
-                                ? lead.website
-                                : `https://${lead.website}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-bold text-[#b5851d] underline"
-                          >
-                            Open
-                          </a>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="max-w-sm p-4">{lead.main_challenge || "-"}</td>
-                      <td className="p-4">
-                        <span className="rounded-full bg-[#f7f0e6] px-3 py-2 text-sm font-black">
-                          {lead.status || "New"}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="rounded-full bg-[#111111] px-3 py-2 text-sm font-black text-white">
-                          {lead.priority || "Warm"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm">
-                        {new Date(lead.created_at).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </section>
     </main>
   );
 }
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (
-    <div className="rounded-[2rem] border border-[#e0caa8] bg-white p-6 shadow-sm">
-      <p className="text-sm font-black uppercase tracking-[0.2em] text-[#b5851d]">
-        {title}
-      </p>
-      <p className="mt-3 text-4xl font-black">{value}</p>
+    <div style={styles.statCard}>
+      <p style={styles.statTitle}>{title}</p>
+      <p style={styles.statValue}>{value}</p>
     </div>
   );
 }
+
+function Info({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <p style={styles.infoLabel}>{label}</p>
+      <p style={styles.infoValue}>{value || "—"}</p>
+    </div>
+  );
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background: "#fbf5e9",
+    color: "#111111",
+    padding: "50px 7%",
+    fontFamily: "Arial, Helvetica, sans-serif",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 24,
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  label: {
+    color: "#bd8d14",
+    textTransform: "uppercase",
+    fontWeight: 900,
+    letterSpacing: 4,
+  },
+  title: {
+    fontFamily: "Georgia, serif",
+    fontSize: 56,
+    lineHeight: 1,
+    margin: "10px 0",
+  },
+  subtitle: {
+    fontSize: 20,
+    color: "#263b58",
+    maxWidth: 760,
+  },
+  homeButton: {
+    background: "#111111",
+    color: "white",
+    padding: "16px 22px",
+    borderRadius: 14,
+    textDecoration: "none",
+    fontWeight: 900,
+  },
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 20,
+    marginBottom: 32,
+  },
+  statCard: {
+    background: "white",
+    border: "1px solid #decba8",
+    borderRadius: 24,
+    padding: 28,
+  },
+  statTitle: {
+    fontWeight: 900,
+    fontSize: 18,
+  },
+  statValue: {
+    fontFamily: "Georgia, serif",
+    fontSize: 56,
+    fontWeight: 900,
+    margin: 0,
+  },
+  panel: {
+    background: "white",
+    border: "1px solid #decba8",
+    borderRadius: 28,
+    padding: 28,
+  },
+  panelHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontFamily: "Georgia, serif",
+    fontSize: 38,
+    margin: 0,
+  },
+  refreshButton: {
+    background: "#111111",
+    color: "white",
+    border: "none",
+    borderRadius: 12,
+    padding: "12px 18px",
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+  leadList: {
+    display: "grid",
+    gap: 22,
+  },
+  leadCard: {
+    border: "1px solid #decba8",
+    borderRadius: 22,
+    padding: 24,
+    background: "#fffdf8",
+  },
+  leadTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 20,
+    marginBottom: 20,
+  },
+  leadName: {
+    fontSize: 26,
+    margin: 0,
+  },
+  smallText: {
+    color: "#52627a",
+    margin: "6px 0",
+  },
+  badges: {
+    display: "flex",
+    gap: 8,
+    alignItems: "flex-start",
+  },
+  badge: {
+    background: "#111111",
+    color: "white",
+    padding: "8px 12px",
+    borderRadius: 999,
+    fontWeight: 800,
+  },
+  badgeGold: {
+    background: "#d6a72c",
+    color: "#111111",
+    padding: "8px 12px",
+    borderRadius: 999,
+    fontWeight: 900,
+  },
+  detailsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+    marginBottom: 18,
+  },
+  infoLabel: {
+    fontSize: 13,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    color: "#bd8d14",
+    fontWeight: 900,
+    marginBottom: 6,
+  },
+  infoValue: {
+    fontWeight: 700,
+    color: "#263b58",
+    wordBreak: "break-word",
+  },
+  challenge: {
+    background: "#fbf5e9",
+    padding: 16,
+    borderRadius: 14,
+    color: "#263b58",
+  },
+  controlsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 16,
+    marginTop: 18,
+  },
+  fieldLabel: {
+    display: "grid",
+    gap: 8,
+    fontWeight: 900,
+    color: "#111111",
+  },
+  input: {
+    width: "100%",
+    padding: 14,
+    border: "1px solid #d7c4a8",
+    borderRadius: 12,
+    fontSize: 16,
+    background: "white",
+  },
+  textarea: {
+    width: "100%",
+    minHeight: 100,
+    padding: 14,
+    border: "1px solid #d7c4a8",
+    borderRadius: 12,
+    fontSize: 16,
+    marginTop: 8,
+  },
+};

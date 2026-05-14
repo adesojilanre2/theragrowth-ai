@@ -1,26 +1,58 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function GET() {
-  try {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("theragrowth_leads")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({ leads: [], error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ success: false, leads: [], error: error.message });
+  }
+
+  return NextResponse.json({ success: true, leads: data || [] });
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const body = await req.json();
+
+    const { id, status, priority, follow_up_date, notes } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Missing lead ID." },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json({ leads: data || [] });
+    const { error } = await supabase
+      .from("theragrowth_leads")
+      .update({
+        status,
+        priority,
+        follow_up_date: follow_up_date || null,
+        notes,
+      })
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
-      { leads: [], error: "Unable to load leads." },
+      { success: false, message: "Server error." },
       { status: 500 }
     );
   }
