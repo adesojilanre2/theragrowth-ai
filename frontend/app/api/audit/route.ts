@@ -1,45 +1,61 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { error } = await supabase.from("theragrowth_leads").insert([
-      {
-        name: body.name || "",
-        email: body.email || "",
-        phone: body.phone || "",
-        practice: body.practice || "",
-        website: body.website || "",
-        budget: body.budget || "Free Audit Only",
-        challenge: body.challenge || "",
-        source: "free_audit",
-        status: "New",
-        priority: "Warm",
-        notes: "",
-      },
-    ]);
+    const {
+      name,
+      email,
+      phone,
+      practice,
+      website,
+      challenge,
+    } = body;
+
+    if (!name || !email) {
+      return NextResponse.json(
+        { error: "Name and email are required." },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabase
+      .from("theragrowth_leads")
+      .insert([
+        {
+          name,
+          email,
+          phone: phone || null,
+          practice: practice || null,
+          website: website || null,
+          challenge: challenge || null,
+          source: "audit",
+          status: "New",
+          priority: "Warm",
+          notes: null,
+        },
+      ])
+      .select();
 
     if (error) {
       return NextResponse.json(
-        { success: false, message: error.message },
+        { error: error.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Request submitted successfully.",
+      lead: data?.[0],
+      message: "Audit request submitted successfully.",
     });
-  } catch {
+  } catch (err) {
     return NextResponse.json(
-      { success: false, message: "Server error." },
+      {
+        error: "Something went wrong submitting the audit request.",
+      },
       { status: 500 }
     );
   }
