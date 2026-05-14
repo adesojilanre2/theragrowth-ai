@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -16,50 +16,52 @@ export default function ChatWidget() {
     {
       role: "assistant",
       content:
-        "Hi 👋 I’m TheraGrowth AI. I help therapists find where their website is losing leads and how to turn more visitors into booked consultations. What do you need help with?",
+        "Hi 👋 I’m TheraGrowth AI. I help therapists identify why their website visitors are not converting into booked private-pay clients. How can I help?",
     },
   ]);
 
-  async function sendMessage(e?: React.FormEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  async function sendMessage() {
+    if (!input.trim() || loading) return;
 
-    const text = input.trim();
-    if (!text || loading) return;
+    const userMessage = input.trim();
 
-    const nextMessages: Message[] = [...messages, { role: "user", content: text }];
-    setMessages(nextMessages);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMessage },
+    ]);
+
     setInput("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: nextMessages,
+          message: userMessage,
         }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      setMessages([
-        ...nextMessages,
+      setMessages((prev) => [
+        ...prev,
         {
           role: "assistant",
           content:
             data.reply ||
-            "Thanks — I can help with that. The best next step is to request a free practice growth audit.",
+            "Sorry, I couldn't process that request right now.",
         },
       ]);
-    } catch {
-      setMessages([
-        ...nextMessages,
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
         {
           role: "assistant",
           content:
-            "Sorry, I had trouble responding. Please request a free audit and we’ll review your website manually.",
+            "Connection issue. Please try again in a moment.",
         },
       ]);
     } finally {
@@ -69,146 +71,186 @@ export default function ChatWidget() {
 
   return (
     <>
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            position: "fixed",
+            right: 24,
+            bottom: 24,
+            background: "#111111",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: 9999,
+            padding: "14px 20px",
+            cursor: "pointer",
+            fontWeight: 700,
+            zIndex: 9999,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+          }}
+        >
+          💬 Chat with us
+        </button>
+      )}
+
       {open && (
-        <div style={styles.chatBox}>
-          <div style={styles.header}>
+        <div
+          style={{
+            position: "fixed",
+            right: 24,
+            bottom: 24,
+            width: 380,
+            height: 520,
+            background: "#ffffff",
+            borderRadius: 24,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            zIndex: 9999,
+            border: "1px solid #e5e5e5",
+          }}
+        >
+          <div
+            style={{
+              background: "#111111",
+              color: "#ffffff",
+              padding: "18px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
-              <strong>TheraGrowth AI</strong>
-              <p style={styles.subText}>Practice growth assistant</p>
+              <div style={{ fontWeight: 800, fontSize: 20 }}>
+                TheraGrowth AI
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#d4af37",
+                }}
+              >
+                Practice growth assistant
+              </div>
             </div>
-            <button onClick={() => setOpen(false)} style={styles.closeButton}>
+
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#ffffff",
+                fontSize: 28,
+                cursor: "pointer",
+              }}
+            >
               ×
             </button>
           </div>
 
-          <div style={styles.messages}>
-            {messages.map((msg, index) => (
+          <div
+            style={{
+              flex: 1,
+              padding: 16,
+              overflowY: "auto",
+              background: "#f9f7f1",
+            }}
+          >
+            {messages.map((msg, i) => (
               <div
-                key={index}
-                style={msg.role === "user" ? styles.userBubble : styles.assistantBubble}
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    msg.role === "user"
+                      ? "flex-end"
+                      : "flex-start",
+                  marginBottom: 12,
+                }}
               >
-                {msg.content}
+                <div
+                  style={{
+                    maxWidth: "80%",
+                    padding: "12px 14px",
+                    borderRadius: 18,
+                    background:
+                      msg.role === "user"
+                        ? "#111111"
+                        : "#ffffff",
+                    color:
+                      msg.role === "user"
+                        ? "#ffffff"
+                        : "#111111",
+                    lineHeight: 1.5,
+                    fontSize: 15,
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  {msg.content}
+                </div>
               </div>
             ))}
 
-            {loading && <div style={styles.assistantBubble}>Typing...</div>}
+            {loading && (
+              <div
+                style={{
+                  background: "#ffffff",
+                  padding: 12,
+                  borderRadius: 14,
+                  width: "fit-content",
+                }}
+              >
+                Thinking...
+              </div>
+            )}
           </div>
 
-          <form onSubmit={sendMessage} style={styles.form}>
+          <div
+            style={{
+              padding: 14,
+              borderTop: "1px solid #e5e5e5",
+              display: "flex",
+              gap: 10,
+              background: "#ffffff",
+            }}
+          >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about getting more clients..."
-              style={styles.input}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+              style={{
+                flex: 1,
+                padding: 14,
+                borderRadius: 14,
+                border: "1px solid #d1d5db",
+                fontSize: 15,
+                outline: "none",
+              }}
             />
-            <button type="submit" style={styles.sendButton}>
+
+            <button
+              onClick={sendMessage}
+              disabled={loading}
+              style={{
+                background: "#111111",
+                color: "#ffffff",
+                border: "none",
+                padding: "14px 18px",
+                borderRadius: 14,
+                cursor: "pointer",
+                fontWeight: 700,
+              }}
+            >
               Send
             </button>
-          </form>
+          </div>
         </div>
       )}
-
-      <button type="button" onClick={() => setOpen(true)} style={styles.launchButton}>
-        💬 Chat with us
-      </button>
     </>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  launchButton: {
-    position: "fixed",
-    right: 28,
-    bottom: 28,
-    zIndex: 100,
-    background: "#111111",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: 999,
-    padding: "16px 22px",
-    fontWeight: 900,
-    cursor: "pointer",
-    boxShadow: "0 12px 35px rgba(0,0,0,0.25)",
-  },
-  chatBox: {
-    position: "fixed",
-    right: 28,
-    bottom: 90,
-    width: 380,
-    maxWidth: "calc(100vw - 40px)",
-    height: 520,
-    zIndex: 101,
-    background: "#ffffff",
-    border: "1px solid #decba8",
-    borderRadius: 24,
-    boxShadow: "0 24px 70px rgba(0,0,0,0.25)",
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-  header: {
-    padding: 18,
-    background: "#111111",
-    color: "#ffffff",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  subText: {
-    margin: 0,
-    fontSize: 13,
-    color: "#d6a72c",
-  },
-  closeButton: {
-    background: "transparent",
-    color: "#ffffff",
-    border: "none",
-    fontSize: 28,
-    cursor: "pointer",
-  },
-  messages: {
-    flex: 1,
-    padding: 18,
-    overflowY: "auto",
-    background: "#fbf5e9",
-  },
-  assistantBubble: {
-    background: "#ffffff",
-    color: "#111111",
-    padding: 12,
-    borderRadius: 14,
-    marginBottom: 12,
-    lineHeight: 1.5,
-  },
-  userBubble: {
-    background: "#111111",
-    color: "#ffffff",
-    padding: 12,
-    borderRadius: 14,
-    marginBottom: 12,
-    marginLeft: 35,
-    lineHeight: 1.5,
-  },
-  form: {
-    display: "flex",
-    gap: 8,
-    padding: 14,
-    borderTop: "1px solid #decba8",
-    background: "#ffffff",
-  },
-  input: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 12,
-    border: "1px solid #decba8",
-  },
-  sendButton: {
-    background: "#111111",
-    color: "#ffffff",
-    border: "none",
-    borderRadius: 12,
-    padding: "0 16px",
-    fontWeight: 900,
-    cursor: "pointer",
-  },
-};
