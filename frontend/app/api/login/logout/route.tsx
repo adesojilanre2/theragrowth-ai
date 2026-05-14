@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
-  const response = NextResponse.json({ success: true });
-
-  response.cookies.set("theragrowth_admin", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
-
+export async function GET() {
+  const response = NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_SITE_URL || "https://theragrowth-ai.com"));
+  response.cookies.delete("sb-access-token");
+  response.cookies.delete("sb-refresh-token");
   return response;
 }

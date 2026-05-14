@@ -7,280 +7,161 @@ export default function SignupPage() {
   const [form, setForm] = useState({
     practice_name: "",
     owner_name: "",
-    owner_email: "",
+    email: "",
+    password: "",
     phone: "",
-    website_url: "",
+    website: "",
     city: "",
     state: "",
     niche: "",
   });
 
-  const [status, setStatus] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  function update(field: string, value: string) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("Creating your TheraGrowth OS account...");
+    setMessage("Creating account...");
 
-    const { error } = await supabase.from("practices").insert([
-      {
-        practice_name: form.practice_name,
-        owner_name: form.owner_name,
-        owner_email: form.owner_email,
-        phone: form.phone,
-        website_url: form.website_url,
-        city: form.city,
-        state: form.state,
-        niche: form.niche,
-        plan: "starter",
-        status: "active",
-      },
-    ]);
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    });
 
     if (error) {
-      console.error(error);
-      setStatus("Something went wrong. Please try again.");
+      setMessage(error.message);
       return;
     }
 
-    setStatus("Success. Your TheraGrowth OS account has been created.");
+    const userId = data.user?.id;
 
-    setForm({
-      practice_name: "",
-      owner_name: "",
-      owner_email: "",
-      phone: "",
-      website_url: "",
-      city: "",
-      state: "",
-      niche: "",
-    });
-  };
+    if (userId) {
+      await supabase.from("therapist_profiles").insert({
+        id: userId,
+        practice_name: form.practice_name,
+        owner_name: form.owner_name,
+        email: form.email,
+        phone: form.phone,
+        website: form.website,
+        city: form.city,
+        state: form.state,
+        niche: form.niche,
+      });
+    }
+
+    setMessage("Account created. You can now log in.");
+    window.location.href = "/login";
+  }
 
   return (
-    <main style={page}>
-      <section style={card}>
-        <div style={logo}>TG</div>
+    <main style={styles.page}>
+      <form onSubmit={handleSignup} style={styles.card}>
+        <div style={styles.logo}>TG</div>
 
-        <p style={eyebrow}>TheraGrowth OS</p>
-        <h1 style={h1}>Create Your Practice Growth Account</h1>
-
-        <p style={lead}>
-          Start your SaaS workspace for lead tracking, AI follow-up, CRM, chatbot
-          settings, and practice growth analytics.
+        <p style={styles.label}>TheraGrowth OS</p>
+        <h1 style={styles.title}>Create Your Practice Growth Account</h1>
+        <p style={styles.subtitle}>
+          Start your SaaS workspace for lead tracking, AI follow-up, CRM, and practice growth.
         </p>
 
-        <form onSubmit={handleSubmit} style={formStyle}>
-          <input
-            style={input}
-            name="practice_name"
-            placeholder="Practice name"
-            value={form.practice_name}
-            onChange={handleChange}
-            required
-          />
+        <input style={styles.input} placeholder="Practice name" value={form.practice_name} onChange={(e) => update("practice_name", e.target.value)} required />
+        <input style={styles.input} placeholder="Owner name" value={form.owner_name} onChange={(e) => update("owner_name", e.target.value)} required />
+        <input style={styles.input} placeholder="Owner email" value={form.email} onChange={(e) => update("email", e.target.value)} required />
+        <input style={styles.input} placeholder="Password" type="password" value={form.password} onChange={(e) => update("password", e.target.value)} required />
+        <input style={styles.input} placeholder="Phone" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
+        <input style={styles.input} placeholder="Website URL" value={form.website} onChange={(e) => update("website", e.target.value)} />
+        <input style={styles.input} placeholder="City" value={form.city} onChange={(e) => update("city", e.target.value)} />
+        <input style={styles.input} placeholder="State" value={form.state} onChange={(e) => update("state", e.target.value)} />
 
-          <input
-            style={input}
-            name="owner_name"
-            placeholder="Owner name"
-            value={form.owner_name}
-            onChange={handleChange}
-            required
-          />
+        <select style={styles.input} value={form.niche} onChange={(e) => update("niche", e.target.value)}>
+          <option value="">Select therapy niche</option>
+          <option>Anxiety Therapy</option>
+          <option>Couples Therapy</option>
+          <option>Trauma Therapy</option>
+          <option>Child / Teen Therapy</option>
+          <option>Private Pay Practice</option>
+        </select>
 
-          <input
-            style={input}
-            type="email"
-            name="owner_email"
-            placeholder="Owner email"
-            value={form.owner_email}
-            onChange={handleChange}
-            required
-          />
+        <button style={styles.button}>Create Practice Account</button>
 
-          <input
-            style={input}
-            name="phone"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={handleChange}
-          />
+        {message && <p style={styles.message}>{message}</p>}
 
-          <input
-            style={input}
-            name="website_url"
-            placeholder="Website URL"
-            value={form.website_url}
-            onChange={handleChange}
-          />
-
-          <div style={twoCol}>
-            <input
-              style={input}
-              name="city"
-              placeholder="City"
-              value={form.city}
-              onChange={handleChange}
-            />
-
-            <input
-              style={input}
-              name="state"
-              placeholder="State"
-              value={form.state}
-              onChange={handleChange}
-            />
-          </div>
-
-          <select
-            style={input}
-            name="niche"
-            value={form.niche}
-            onChange={handleChange}
-          >
-            <option value="">Select therapy niche</option>
-            <option value="Anxiety Therapy">Anxiety Therapy</option>
-            <option value="Trauma Therapy">Trauma Therapy</option>
-            <option value="Couples Therapy">Couples Therapy</option>
-            <option value="Child Therapy">Child Therapy</option>
-            <option value="EMDR Therapy">EMDR Therapy</option>
-            <option value="Private-Pay Psychology">
-              Private-Pay Psychology
-            </option>
-            <option value="General Private Practice">
-              General Private Practice
-            </option>
-          </select>
-
-          <button style={button} type="submit">
-            Create Practice Account
-          </button>
-
-          {status && <p style={statusStyle}>{status}</p>}
-        </form>
-
-        <p style={bottomText}>
-          Already created an account? Go to{" "}
-          <a style={link} href="/dashboard">
-            dashboard
-          </a>
+        <p>
+          Already created an account? <a href="/login">Go to login</a>
         </p>
-      </section>
+      </form>
     </main>
   );
 }
 
-const gold = "#b8892e";
-const black = "#111111";
-const cream = "#f7f1e8";
-const soft = "#fffaf2";
-
-const page = {
-  minHeight: "100vh",
-  background: cream,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: 30,
-  fontFamily: "Arial, sans-serif",
-} as const;
-
-const card = {
-  width: "100%",
-  maxWidth: 760,
-  background: soft,
-  border: "1px solid #e1cfb3",
-  borderRadius: 32,
-  padding: 40,
-  boxShadow: "0 24px 70px rgba(0,0,0,.08)",
-} as const;
-
-const logo = {
-  width: 70,
-  height: 70,
-  borderRadius: "50%",
-  background: black,
-  color: gold,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontFamily: "Georgia, serif",
-  fontSize: 30,
-  fontWeight: 900,
-  marginBottom: 20,
-} as const;
-
-const eyebrow = {
-  color: gold,
-  fontWeight: 900,
-  letterSpacing: 2,
-  textTransform: "uppercase",
-} as const;
-
-const h1 = {
-  fontFamily: "Georgia, serif",
-  fontSize: "clamp(38px, 6vw, 64px)",
-  lineHeight: 1,
-  margin: "10px 0 18px",
-} as const;
-
-const lead = {
-  color: "#3d3328",
-  fontSize: 18,
-  lineHeight: 1.6,
-  marginBottom: 26,
-} as const;
-
-const formStyle = {
-  display: "grid",
-  gap: 14,
-} as const;
-
-const twoCol = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: 14,
-} as const;
-
-const input = {
-  width: "100%",
-  padding: 17,
-  borderRadius: 14,
-  border: "1px solid #d7c4a8",
-  background: "#fffaf5",
-  fontSize: 16,
-  boxSizing: "border-box",
-} as const;
-
-const button = {
-  background: black,
-  color: "white",
-  border: "none",
-  padding: 18,
-  borderRadius: 16,
-  fontWeight: 900,
-  fontSize: 16,
-  cursor: "pointer",
-  marginTop: 6,
-} as const;
-
-const statusStyle = {
-  fontWeight: 900,
-  color: gold,
-} as const;
-
-const bottomText = {
-  marginTop: 22,
-  color: "#6b5b48",
-} as const;
-
-const link = {
-  color: black,
-  fontWeight: 900,
-} as const;
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background: "#f7f0e7",
+    display: "flex",
+    justifyContent: "center",
+    padding: 40,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 760,
+    background: "#fffaf3",
+    border: "1px solid #decba8",
+    borderRadius: 28,
+    padding: 40,
+  },
+  logo: {
+    width: 70,
+    height: 70,
+    borderRadius: "50%",
+    background: "#111",
+    color: "#d4a017",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 900,
+    fontSize: 28,
+  },
+  label: {
+    color: "#b8860b",
+    fontWeight: 900,
+    letterSpacing: 4,
+    textTransform: "uppercase",
+  },
+  title: {
+    fontSize: 56,
+    lineHeight: 1,
+    margin: "10px 0",
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#263b58",
+    marginBottom: 28,
+  },
+  input: {
+    width: "100%",
+    padding: 18,
+    marginBottom: 16,
+    borderRadius: 14,
+    border: "1px solid #decba8",
+    fontSize: 16,
+  },
+  button: {
+    width: "100%",
+    background: "#111",
+    color: "#fff",
+    padding: 18,
+    borderRadius: 14,
+    border: "none",
+    fontWeight: 900,
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  message: {
+    fontWeight: 800,
+    color: "green",
+  },
+};
