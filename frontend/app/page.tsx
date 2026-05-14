@@ -77,7 +77,7 @@ export default function HomePage() {
           <a href="#services">Services</a>
           <a href="#pricing">Pricing</a>
           <a href="#process">Process</a>
-          <a href="#dashboard">Dashboard</a>
+          <a href="/dashboard">Dashboard</a>
           <a href="/signup">Signup</a>
           <a href="/login">Login</a>
           <a href="#audit" style={styles.outlineButton}>Free Audit</a>
