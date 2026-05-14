@@ -1,58 +1,79 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from("theragrowth_leads")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("theragrowth_leads")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ success: false, leads: [], error: error.message });
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message, leads: [] },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      leads: data || [],
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to load leads.",
+        leads: [],
+      },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ success: true, leads: data || [] });
 }
 
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
 
-    const { id, status, priority, follow_up_date, notes } = body;
+    const { id, status, priority, notes, follow_up_date } = body;
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: "Missing lead ID." },
+        { success: false, error: "Lead ID is required." },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
+    const updates: Record<string, unknown> = {};
+
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
+    if (notes !== undefined) updates.notes = notes;
+    if (follow_up_date !== undefined) updates.follow_up_date = follow_up_date;
+
+    const { data, error } = await supabase
       .from("theragrowth_leads")
-      .update({
-        status,
-        priority,
-        follow_up_date: follow_up_date || null,
-        notes,
-      })
-      .eq("id", id);
+      .update(updates)
+      .eq("id", id)
+      .select();
 
     if (error) {
       return NextResponse.json(
-        { success: false, message: error.message },
+        { success: false, error: error.message },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      lead: data?.[0],
+    });
   } catch {
     return NextResponse.json(
-      { success: false, message: "Server error." },
+      {
+        success: false,
+        error: "Failed to update lead.",
+      },
       { status: 500 }
     );
   }
