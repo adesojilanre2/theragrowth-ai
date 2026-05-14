@@ -76,11 +76,9 @@ Rules:
     });
 
     if (!response.ok) {
-  const errorText = await response.text();
-
   return NextResponse.json({
     reply:
-      "OpenAI API error: " + errorText,
+      "I’m sorry — I had trouble processing that. Please try again in a moment, or request a free audit and we’ll help directly.",
   });
 }
 
