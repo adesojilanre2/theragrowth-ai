@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Lead = {
   id: string;
@@ -18,113 +19,114 @@ type Lead = {
   follow_up_date?: string;
 };
 
-const STATUS_OPTIONS = ["New", "Contacted", "Follow-Up", "Booked", "Not Fit"];
-const PRIORITY_OPTIONS = ["Hot", "Warm", "Cold"];
-
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
+  async function getToken() {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || "";
+  }
 
   async function loadLeads() {
     setLoading(true);
-    setError("");
 
-    try {
-      const res = await fetch("/api/leads", { cache: "no-store" });
-      const data = await res.json();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (!res.ok) {
-        setError(data?.error || "Failed to load leads.");
-        setLeads([]);
-        return;
-      }
-
-      setLeads(Array.isArray(data.leads) ? data.leads : []);
-    } catch {
-      setError("Could not connect to leads API.");
-      setLeads([]);
-    } finally {
-      setLoading(false);
+    if (!user) {
+      window.location.href = "/login";
+      return;
     }
+
+    setUserEmail(user.email || "");
+
+    const token = await getToken();
+
+    const res = await fetch("/api/leads", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    setLeads(data.leads || []);
+    setLoading(false);
   }
 
   async function updateLead(id: string, updates: Partial<Lead>) {
-    try {
-      await fetch("/api/leads", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...updates }),
-      });
+    const token = await getToken();
 
-      await loadLeads();
-    } catch {
-      setError("Could not update lead.");
-    }
+    await fetch("/api/leads", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id, ...updates }),
+    });
+
+    loadLeads();
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
   }
 
   useEffect(() => {
     loadLeads();
   }, []);
 
-  const stats = useMemo(() => {
-    return {
-      total: leads.length,
-      new: leads.filter((l) => normalize(l.status) === "new").length,
-      warm: leads.filter((l) => normalize(l.priority) === "warm").length,
-      booked: leads.filter((l) => normalize(l.status) === "booked").length,
-      websites: leads.filter((l) => Boolean(l.website)).length,
-    };
-  }, [leads]);
+  const totalLeads = leads.length;
+  const newLeads = leads.filter((lead) => (lead.status || "New") === "New").length;
+  const warmLeads = leads.filter((lead) => (lead.priority || "Warm") === "Warm").length;
+  const bookedLeads = leads.filter((lead) => lead.status === "Booked").length;
+  const websitesCaptured = leads.filter((lead) => lead.website && lead.website !== "-").length;
 
   return (
     <main style={styles.page}>
-      <section style={styles.header}>
+      <section style={styles.hero}>
         <div>
           <p style={styles.label}>TheraGrowth OS</p>
           <h1 style={styles.title}>Client Acquisition Dashboard</h1>
           <p style={styles.subtitle}>
-            Track audit requests, chatbot leads, follow-ups, booked calls, and
-            website opportunities.
+            Logged in as <b>{userEmail}</b>. Track only your own practice leads,
+            follow-ups, booked calls, and website opportunities.
           </p>
         </div>
 
-        <div style={styles.headerActions}>
-          <a href="/" style={styles.homeButton}>
-            Back to Website
-          </a>
-          <button onClick={loadLeads} style={styles.refreshButton}>
+        <div style={styles.actions}>
+          <a href="/" style={styles.lightButton}>Back to Website</a>
+          <button onClick={loadLeads} style={styles.darkButton}>
             {loading ? "Refreshing..." : "Refresh Leads"}
           </button>
+          <button onClick={logout} style={styles.lightButton}>Logout</button>
         </div>
       </section>
-
-      {error && <div style={styles.errorBox}>{error}</div>}
 
       <section style={styles.statsGrid}>
-        <StatCard title="Total Leads" value={stats.total} />
-        <StatCard title="New Leads" value={stats.new} />
-        <StatCard title="Warm Leads" value={stats.warm} />
-        <StatCard title="Booked Calls" value={stats.booked} />
-        <StatCard title="Websites Captured" value={stats.websites} />
+        <StatCard title="Total Leads" value={totalLeads} />
+        <StatCard title="New Leads" value={newLeads} />
+        <StatCard title="Warm Leads" value={warmLeads} />
+        <StatCard title="Booked Calls" value={bookedLeads} />
+        <StatCard title="Websites Captured" value={websitesCaptured} />
       </section>
 
-      <section style={styles.tableCard}>
-        <div style={styles.tableHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Lead CRM</h2>
-            <p style={styles.sectionText}>
-              Manage every therapist inquiry from audit request to booked call.
-            </p>
-          </div>
-        </div>
+      <section style={styles.crmCard}>
+        <h2 style={styles.sectionTitle}>Lead CRM</h2>
+        <p style={styles.sectionText}>
+          Manage every therapist inquiry from audit request to booked call.
+        </p>
 
         {leads.length === 0 ? (
-          <p style={styles.emptyText}>
-            No leads yet. Submit a test Free Audit form from the homepage.
-          </p>
+          <div style={styles.emptyBox}>
+            No private leads yet for this account. Submit a test audit form or chatbot inquiry.
+          </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div style={styles.tableWrap}>
             <table style={styles.table}>
               <thead>
                 <tr>
@@ -146,34 +148,26 @@ export default function DashboardPage() {
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead.id}>
-                    <td style={styles.td}>{formatDate(lead.created_at)}</td>
+                    <td style={styles.td}>
+                      {lead.created_at
+                        ? new Date(lead.created_at).toLocaleDateString()
+                        : "-"}
+                    </td>
                     <td style={styles.td}>{lead.name || "-"}</td>
                     <td style={styles.td}>{lead.email || "-"}</td>
                     <td style={styles.td}>{lead.phone || "-"}</td>
                     <td style={styles.td}>{lead.practice || "-"}</td>
-
                     <td style={styles.td}>
                       {lead.website ? (
-                        <a
-                          href={safeUrl(lead.website)}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={styles.link}
-                        >
-                          Visit Site
+                        <a href={lead.website} target="_blank" rel="noreferrer">
+                          Visit
                         </a>
                       ) : (
                         "-"
                       )}
                     </td>
-
-                    <td style={styles.td}>
-                      <div style={styles.challenge}>
-                        {lead.challenge || "-"}
-                      </div>
-                    </td>
-
-                    <td style={styles.td}>{lead.source || "Free Audit"}</td>
+                    <td style={styles.td}>{lead.challenge || "-"}</td>
+                    <td style={styles.td}>{lead.source || "-"}</td>
 
                     <td style={styles.td}>
                       <select
@@ -183,9 +177,11 @@ export default function DashboardPage() {
                         }
                         style={styles.select}
                       >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status}>{status}</option>
-                        ))}
+                        <option>New</option>
+                        <option>Contacted</option>
+                        <option>Follow-Up</option>
+                        <option>Booked</option>
+                        <option>Not Fit</option>
                       </select>
                     </td>
 
@@ -197,9 +193,9 @@ export default function DashboardPage() {
                         }
                         style={styles.select}
                       >
-                        {PRIORITY_OPTIONS.map((priority) => (
-                          <option key={priority}>{priority}</option>
-                        ))}
+                        <option>Hot</option>
+                        <option>Warm</option>
+                        <option>Cold</option>
                       </select>
                     </td>
 
@@ -246,143 +242,123 @@ function StatCard({ title, value }: { title: string; value: number }) {
   );
 }
 
-function normalize(value?: string) {
-  return (value || "").trim().toLowerCase();
-}
-
-function formatDate(date?: string) {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString();
-}
-
-function safeUrl(url: string) {
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `https://${url}`;
-}
-
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f8f1e6",
-    padding: "60px 7%",
-    color: "#111",
+    background: "#f8f1e8",
+    color: "#071a33",
+    padding: "70px 7%",
     fontFamily: "Arial, Helvetica, sans-serif",
   },
-  header: {
+  hero: {
     display: "flex",
     justifyContent: "space-between",
+    gap: 30,
     alignItems: "flex-start",
-    gap: 24,
     flexWrap: "wrap",
-    marginBottom: 40,
+    marginBottom: 60,
   },
   label: {
-    color: "#b88708",
-    fontWeight: 900,
-    letterSpacing: 5,
+    color: "#b88700",
     textTransform: "uppercase",
-    marginBottom: 10,
+    letterSpacing: 5,
+    fontWeight: 900,
+    marginBottom: 14,
   },
   title: {
     fontFamily: "Georgia, serif",
     fontSize: 58,
     lineHeight: 1,
+    color: "#111",
     margin: 0,
   },
   subtitle: {
-    fontSize: 21,
-    color: "#17375e",
-    maxWidth: 760,
+    fontSize: 20,
     lineHeight: 1.6,
+    maxWidth: 760,
+    marginTop: 18,
   },
-  headerActions: {
+  actions: {
     display: "flex",
     gap: 12,
     flexWrap: "wrap",
   },
-  homeButton: {
-    background: "#fff",
-    color: "#111",
-    border: "1px solid #dec8a5",
-    padding: "16px 22px",
-    borderRadius: 16,
-    textDecoration: "none",
-    fontWeight: 900,
-  },
-  refreshButton: {
+  darkButton: {
     background: "#111",
     color: "#fff",
     border: "none",
-    padding: "16px 24px",
-    borderRadius: 16,
-    cursor: "pointer",
-    fontWeight: 900,
-    fontSize: 16,
-  },
-  errorBox: {
-    background: "#ffecec",
-    color: "#9b111e",
-    padding: 16,
     borderRadius: 14,
-    marginBottom: 24,
-    fontWeight: 800,
+    padding: "16px 24px",
+    fontWeight: 900,
+    cursor: "pointer",
+  },
+  lightButton: {
+    background: "#fffaf2",
+    color: "#111",
+    border: "1px solid #decba8",
+    borderRadius: 14,
+    padding: "16px 24px",
+    fontWeight: 900,
+    textDecoration: "none",
+    cursor: "pointer",
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
     gap: 20,
-    marginBottom: 42,
+    marginBottom: 50,
   },
   statCard: {
     background: "#fff",
+    border: "1px solid #decba8",
+    borderRadius: 20,
     padding: 28,
-    borderRadius: 24,
-    border: "1px solid #dec8a5",
-    boxShadow: "0 14px 30px rgba(0,0,0,0.05)",
+    boxShadow: "0 18px 45px rgba(0,0,0,0.06)",
   },
   statLabel: {
-    color: "#b88708",
-    fontWeight: 900,
-    letterSpacing: 4,
+    color: "#b88700",
     textTransform: "uppercase",
-    fontSize: 13,
+    letterSpacing: 4,
+    fontWeight: 900,
+    fontSize: 14,
   },
   statValue: {
     fontFamily: "Georgia, serif",
-    fontSize: 52,
-    margin: "10px 0 0",
+    fontSize: 54,
+    margin: "20px 0 0",
+    color: "#111",
   },
-  tableCard: {
+  crmCard: {
     background: "#fff",
-    borderRadius: 28,
-    padding: 28,
-    border: "1px solid #dec8a5",
-    boxShadow: "0 20px 45px rgba(0,0,0,0.07)",
-  },
-  tableHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 20,
-    marginBottom: 24,
+    border: "1px solid #decba8",
+    borderRadius: 24,
+    padding: 30,
+    boxShadow: "0 20px 50px rgba(0,0,0,0.08)",
   },
   sectionTitle: {
     fontFamily: "Georgia, serif",
-    fontSize: 42,
+    fontSize: 44,
     margin: 0,
+    color: "#111",
   },
   sectionText: {
-    color: "#17375e",
-    fontSize: 17,
-  },
-  emptyText: {
     fontSize: 18,
-    color: "#333",
+    marginBottom: 24,
+  },
+  emptyBox: {
+    padding: 24,
+    background: "#fffaf2",
+    border: "1px solid #decba8",
+    borderRadius: 18,
+    fontSize: 18,
+  },
+  tableWrap: {
+    overflowX: "auto",
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    minWidth: 1250,
+    minWidth: 1300,
   },
   th: {
     background: "#111",
@@ -390,7 +366,6 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 14,
     textAlign: "left",
     fontSize: 14,
-    whiteSpace: "nowrap",
   },
   td: {
     padding: 14,
@@ -398,31 +373,23 @@ const styles: Record<string, React.CSSProperties> = {
     verticalAlign: "top",
     fontSize: 15,
   },
-  link: {
-    color: "#b88708",
-    fontWeight: 900,
-  },
   select: {
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid #dec8a5",
+    padding: 10,
+    borderRadius: 10,
+    border: "1px solid #decba8",
     background: "#fff",
     fontWeight: 700,
   },
   input: {
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid #dec8a5",
+    padding: 10,
+    borderRadius: 10,
+    border: "1px solid #decba8",
   },
   notes: {
-    width: 220,
-    minHeight: 80,
+    width: 180,
+    minHeight: 70,
     borderRadius: 12,
-    border: "1px solid #dec8a5",
+    border: "1px solid #decba8",
     padding: 10,
-  },
-  challenge: {
-    maxWidth: 260,
-    lineHeight: 1.5,
   },
 };
