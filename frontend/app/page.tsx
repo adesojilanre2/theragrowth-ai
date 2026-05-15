@@ -1,5 +1,5 @@
 "use client";
-
+import { supabase } from "../lib/supabase";
 import React, { useState } from "react";
 import ChatWidget from "../components/ChatWidget";
 
@@ -28,39 +28,53 @@ export default function HomePage() {
   }
 
   async function handleAuditSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("Submitting...");
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
 
-    try {
-      const response = await fetch("/api/audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      const data = await response.json();
+    const res = await fetch("/api/audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...form,
+        user_id: user?.id || null,
+        owner_email: user?.email || null,
+        source: "free_audit",
+      }),
+    });
 
-      if (data.success) {
-        setMessage("✅ Request submitted successfully.");
-        setForm({
-          name: "",
-          email: "",
-          phone: "",
-          practice: "",
-          website: "",
-          budget: "Free Audit Only",
-          challenge: "",
-        });
-      } else {
-        setMessage("❌ " + (data.message || "Something went wrong."));
-      }
-    } catch {
-      setMessage("❌ Server error.");
-    } finally {
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      setMessage("❌ Submission failed. Please try again.");
       setLoading(false);
+      return;
     }
+
+    setMessage("✅ Request submitted successfully.");
+
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      practice: "",
+      website: "",
+      budget: "Free Audit Only",
+      challenge: "",
+    });
+  } catch {
+    setMessage("❌ Something went wrong. Please try again.");
   }
+
+  setLoading(false);
+}
 
   return (
     <main style={styles.main}>
