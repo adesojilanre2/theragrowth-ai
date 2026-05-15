@@ -11,7 +11,6 @@ export async function POST(req: Request) {
     const practice = body.practice || "";
     const website = body.website || "";
     const challenge = body.challenge || "";
-    const budget = body.budget || "Free Audit Only";
     const user_id = body.user_id || null;
     const owner_email = body.owner_email || null;
 
@@ -34,7 +33,6 @@ export async function POST(req: Request) {
           practice,
           website,
           challenge,
-          budget,
           source: "free_audit",
           status: "New",
           priority: "Warm",
