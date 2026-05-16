@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 type Lead = {
@@ -17,55 +17,62 @@ type Lead = {
   priority?: string;
   notes?: string;
   follow_up_date?: string;
+  owner_email?: string;
 };
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  async function getToken() {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.access_token || "";
-  }
-
-  async function loadLeads() {
-    setLoading(true);
-
+  async function getUserEmail() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (!user?.email) {
       window.location.href = "/login";
+      return "";
+    }
+
+    setOwnerEmail(user.email);
+    return user.email;
+  }
+
+  async function loadLeads() {
+    setLoading(true);
+    setMessage("");
+
+    const email = ownerEmail || (await getUserEmail());
+
+    if (!email) {
+      setLoading(false);
       return;
     }
 
-    setUserEmail(user.email || "");
+    try {
+      const res = await fetch(`/api/leads?owner_email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      setLeads(data.leads || []);
+    } catch {
+      setMessage("Could not load leads.");
+    }
 
-    const token = await getToken();
-
-    const res = await fetch("/api/leads", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    setLeads(data.leads || []);
     setLoading(false);
   }
 
   async function updateLead(id: string, updates: Partial<Lead>) {
-    const token = await getToken();
+    if (!ownerEmail) return;
 
     await fetch("/api/leads", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id, ...updates }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        owner_email: ownerEmail,
+        ...updates,
+      }),
     });
 
     loadLeads();
@@ -81,30 +88,33 @@ export default function DashboardPage() {
   }, []);
 
   const totalLeads = leads.length;
-  const newLeads = leads.filter((lead) => (lead.status || "New") === "New").length;
-  const warmLeads = leads.filter((lead) => (lead.priority || "Warm") === "Warm").length;
-  const bookedLeads = leads.filter((lead) => lead.status === "Booked").length;
-  const websitesCaptured = leads.filter((lead) => lead.website && lead.website !== "-").length;
+  const newLeads = leads.filter((l) => l.status === "New").length;
+  const warmLeads = leads.filter((l) => l.priority === "Warm").length;
+  const bookedLeads = leads.filter((l) => l.status === "Booked").length;
+  const followUpsDue = leads.filter((l) => {
+    if (!l.follow_up_date) return false;
+    return new Date(l.follow_up_date) <= new Date();
+  }).length;
 
   return (
     <main style={styles.page}>
-      <section style={styles.hero}>
-        <div>
-          <p style={styles.label}>TheraGrowth OS</p>
-          <h1 style={styles.title}>Client Acquisition Dashboard</h1>
-          <p style={styles.subtitle}>
-            Logged in as <b>{userEmail}</b>. Track only your own practice leads,
-            follow-ups, booked calls, and website opportunities.
-          </p>
-        </div>
+      <section style={styles.header}>
+        <p style={styles.label}>TheraGrowth OS</p>
+        <h1 style={styles.title}>Client Acquisition Dashboard</h1>
+        <p style={styles.subtitle}>
+          Logged in as <b>{ownerEmail}</b>. Manage your audit leads, follow-ups,
+          and booked calls.
+        </p>
 
-        <div style={styles.actions}>
-          <a href="/" style={styles.lightButton}>Back to Website</a>
-          <button onClick={loadLeads} style={styles.darkButton}>
+        <div style={styles.buttonRow}>
+          <a href="/" style={styles.secondaryButton}>Back to Website</a>
+          <button onClick={loadLeads} style={styles.primaryButton}>
             {loading ? "Refreshing..." : "Refresh Leads"}
           </button>
-          <button onClick={logout} style={styles.lightButton}>Logout</button>
+          <button onClick={logout} style={styles.secondaryButton}>Logout</button>
         </div>
+
+        {message && <p style={styles.error}>{message}</p>}
       </section>
 
       <section style={styles.statsGrid}>
@@ -112,19 +122,17 @@ export default function DashboardPage() {
         <StatCard title="New Leads" value={newLeads} />
         <StatCard title="Warm Leads" value={warmLeads} />
         <StatCard title="Booked Calls" value={bookedLeads} />
-        <StatCard title="Websites Captured" value={websitesCaptured} />
+        <StatCard title="Follow-Ups Due" value={followUpsDue} />
       </section>
 
       <section style={styles.crmCard}>
         <h2 style={styles.sectionTitle}>Lead CRM</h2>
-        <p style={styles.sectionText}>
-          Manage every therapist inquiry from audit request to booked call.
+        <p style={styles.crmSubtitle}>
+          Update status, priority, notes, and follow-up dates.
         </p>
 
         {leads.length === 0 ? (
-          <div style={styles.emptyBox}>
-            No private leads yet for this account. Submit a test audit form or chatbot inquiry.
-          </div>
+          <p>No leads yet. Submit a free audit form while logged in.</p>
         ) : (
           <div style={styles.tableWrap}>
             <table style={styles.table}>
@@ -159,7 +167,7 @@ export default function DashboardPage() {
                     <td style={styles.td}>{lead.practice || "-"}</td>
                     <td style={styles.td}>
                       {lead.website ? (
-                        <a href={lead.website} target="_blank" rel="noreferrer">
+                        <a href={lead.website} target="_blank">
                           Visit
                         </a>
                       ) : (
@@ -179,7 +187,6 @@ export default function DashboardPage() {
                       >
                         <option>New</option>
                         <option>Contacted</option>
-                        <option>Follow-Up</option>
                         <option>Booked</option>
                         <option>Not Fit</option>
                       </select>
@@ -245,120 +252,107 @@ function StatCard({ title, value }: { title: string; value: number }) {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f8f1e8",
-    color: "#071a33",
+    background: "#f7f0e7",
     padding: "70px 7%",
-    fontFamily: "Arial, Helvetica, sans-serif",
+    color: "#111",
   },
-  hero: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 30,
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-    marginBottom: 60,
+  header: {
+    marginBottom: 70,
   },
   label: {
     color: "#b88700",
-    textTransform: "uppercase",
-    letterSpacing: 5,
     fontWeight: 900,
-    marginBottom: 14,
+    letterSpacing: 6,
+    textTransform: "uppercase",
   },
   title: {
     fontFamily: "Georgia, serif",
-    fontSize: 58,
+    fontSize: 62,
+    margin: "10px 0",
     lineHeight: 1,
-    color: "#111",
-    margin: 0,
   },
   subtitle: {
-    fontSize: 20,
-    lineHeight: 1.6,
-    maxWidth: 760,
-    marginTop: 18,
+    fontSize: 21,
+    color: "#08234a",
+    maxWidth: 780,
+    lineHeight: 1.5,
   },
-  actions: {
+  buttonRow: {
     display: "flex",
-    gap: 12,
+    gap: 14,
+    marginTop: 24,
     flexWrap: "wrap",
   },
-  darkButton: {
+  primaryButton: {
     background: "#111",
     color: "#fff",
     border: "none",
     borderRadius: 14,
-    padding: "16px 24px",
+    padding: "17px 24px",
     fontWeight: 900,
     cursor: "pointer",
   },
-  lightButton: {
-    background: "#fffaf2",
+  secondaryButton: {
+    background: "#fffaf3",
     color: "#111",
     border: "1px solid #decba8",
     borderRadius: 14,
-    padding: "16px 24px",
+    padding: "17px 24px",
     fontWeight: 900,
     textDecoration: "none",
     cursor: "pointer",
   },
+  error: {
+    color: "crimson",
+    fontWeight: 800,
+  },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-    gap: 20,
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 22,
     marginBottom: 50,
   },
   statCard: {
     background: "#fff",
     border: "1px solid #decba8",
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 28,
-    boxShadow: "0 18px 45px rgba(0,0,0,0.06)",
+    boxShadow: "0 15px 35px rgba(0,0,0,0.05)",
   },
   statLabel: {
     color: "#b88700",
-    textTransform: "uppercase",
-    letterSpacing: 4,
     fontWeight: 900,
-    fontSize: 14,
+    letterSpacing: 5,
+    textTransform: "uppercase",
   },
   statValue: {
     fontFamily: "Georgia, serif",
     fontSize: 54,
     margin: "20px 0 0",
-    color: "#111",
   },
   crmCard: {
     background: "#fff",
     border: "1px solid #decba8",
     borderRadius: 24,
     padding: 30,
-    boxShadow: "0 20px 50px rgba(0,0,0,0.08)",
   },
   sectionTitle: {
     fontFamily: "Georgia, serif",
     fontSize: 44,
     margin: 0,
-    color: "#111",
   },
-  sectionText: {
-    fontSize: 18,
-    marginBottom: 24,
-  },
-  emptyBox: {
-    padding: 24,
-    background: "#fffaf2",
-    border: "1px solid #decba8",
-    borderRadius: 18,
-    fontSize: 18,
+  crmSubtitle: {
+    color: "#08234a",
+    fontSize: 17,
   },
   tableWrap: {
     overflowX: "auto",
+    marginTop: 24,
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    minWidth: 1300,
+    minWidth: 1200,
   },
   th: {
     background: "#111",
@@ -371,14 +365,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 14,
     borderBottom: "1px solid #eee",
     verticalAlign: "top",
-    fontSize: 15,
   },
   select: {
     padding: 10,
     borderRadius: 10,
     border: "1px solid #decba8",
     background: "#fff",
-    fontWeight: 700,
   },
   input: {
     padding: 10,
@@ -388,7 +380,7 @@ const styles: Record<string, React.CSSProperties> = {
   notes: {
     width: 180,
     minHeight: 70,
-    borderRadius: 12,
+    borderRadius: 10,
     border: "1px solid #decba8",
     padding: 10,
   },

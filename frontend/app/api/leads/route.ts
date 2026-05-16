@@ -1,89 +1,66 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-function getBearerToken(req: Request) {
-  const authHeader = req.headers.get("authorization") || "";
-  return authHeader.replace("Bearer ", "");
-}
-
-function createUserSupabase(req: Request) {
-  const token = getBearerToken(req);
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    },
-  });
-}
+import { supabase } from "../../../lib/supabase";
 
 export async function GET(req: Request) {
-  try {
-    const supabase = createUserSupabase(req);
+  const { searchParams } = new URL(req.url);
+  const owner_email = searchParams.get("owner_email");
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ leads: [] }, { status: 401 });
-    }
-
-    const { data, error } = await supabase
-      .from("theragrowth_leads")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json({ leads: [], error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ leads: data || [] });
-  } catch (error) {
-    return NextResponse.json({ leads: [], error: "Failed to load leads" }, { status: 500 });
+  if (!owner_email) {
+    return NextResponse.json({ leads: [] });
   }
+
+  const { data, error } = await supabase
+    .from("theragrowth_leads")
+    .select("*")
+    .eq("owner_email", owner_email)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ leads: [], error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ leads: data || [] });
 }
 
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, ...updates } = body;
+    const { id, owner_email, status, priority, notes, follow_up_date } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing lead id" }, { status: 400 });
+    if (!id || !owner_email) {
+      return NextResponse.json(
+        { success: false, error: "Missing lead id or owner email." },
+        { status: 400 }
+      );
     }
 
-    const supabase = createUserSupabase(req);
+    const updates: Record<string, string | null> = {};
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
+    if (notes !== undefined) updates.notes = notes;
+    if (follow_up_date !== undefined) updates.follow_up_date = follow_up_date || null;
 
     const { data, error } = await supabase
       .from("theragrowth_leads")
       .update(updates)
       .eq("id", id)
-      .eq("user_id", user.id)
+      .eq("owner_email", owner_email)
       .select()
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ lead: data });
+    return NextResponse.json({ success: true, lead: data });
   } catch {
-    return NextResponse.json({ error: "Failed to update lead" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Lead update failed." },
+      { status: 500 }
+    );
   }
 }
